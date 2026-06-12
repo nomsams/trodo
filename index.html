@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spatial Kanban Canvas</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        :root {
+            /* Apple/Google Hybrid Minimalist Palette */
+            --bg-color: #f5f5f7;
+            --text-color: #1d1d1f;
+            --col-bg: #e8e8ed;
+            --note-bg: #ffffff;
+            --border-color: #d2d2d7;
+            --accent-color: #0066cc;
+            --urgent-color: #ff3b30;
+            --done-color: #34c759;
+            --shadow: 0 4px 6px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1c1c1e;
+            --text-color: #f5f5f7;
+            --col-bg: #2c2c2e;
+            --note-bg: #3a3a3c;
+            --border-color: #48484a;
+            --accent-color: #0a84ff;
+            --shadow: 0 4px 6px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: var(--font-family); background: var(--bg-color); color: var(--text-color); overflow: hidden; display: flex; flex-direction: column; height: 100vh; transition: background-color 0.3s, color 0.3s; }
+        
+        /* Typography & Basics */
+        button { cursor: pointer; border: none; background: var(--col-bg); color: var(--text-color); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; transition: var(--transition); border: 1px solid var(--border-color); }
+        button:hover { filter: brightness(1.1); }
+        button.primary { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+        input, select, textarea { background: var(--note-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; font-family: inherit; }
+        
+        /* Top Bar */
+        #top-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: var(--col-bg); border-bottom: 1px solid var(--border-color); z-index: 100; box-shadow: var(--shadow); }
+        .top-group { display: flex; align-items: center; gap: 10px; }
+        
+        /* Users */
+        #users-container { display: flex; gap: 5px; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; cursor: pointer; position: relative; border: 2px solid var(--bg-color); }
+        .user-avatar .tooltip { visibility: hidden; position: absolute; top: 110%; left: 50%; transform: translateX(-50%); background: var(--text-color); color: var(--bg-color); padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap; z-index: 1000; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+        .user-avatar:hover .tooltip { visibility: visible; opacity: 1; }
+
+        /* Board Area */
+        #board-container { flex: 1; overflow: hidden; position: relative; cursor: grab; }
+        #board-container:active { cursor: grabbing; }
+        #canvas-wrapper { display: flex; gap: 20px; padding: 40px; min-width: 1200px; height: 100%; transform-origin: 0 0; transition: transform 0.1s linear; }
+        
+        /* Columns */
+        .column { background: var(--col-bg); border-radius: 12px; display: flex; flex-direction: column; padding: 15px; gap: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow); transition: flex-basis 0.3s ease; }
+        .column-header { font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-color); opacity: 0.8; }
+        .column-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; min-height: 200px; }
+        
+        /* Layout Ratios */
+        #col-todo { flex: 1 1 25%; }
+        #col-in-progress { flex: 1 1 50%; position: relative; overflow: hidden; }
+        #col-review { flex: 1 1 25%; display: none; }
+        #col-done { flex: 1 1 25%; }
+        body.review-enabled #col-in-progress { flex: 1 1 35%; }
+        body.review-enabled #col-review { display: flex; }
+
+        /* In-Progress Pulse Animation */
+        @keyframes pulse-bg { 0% { box-shadow: inset 0 0 0 0 rgba(10, 132, 255, 0.1); } 50% { box-shadow: inset 0 0 20px 5px rgba(10, 132, 255, 0.2); } 100% { box-shadow: inset 0 0 0 0 rgba(10, 132, 255, 0.1); } }
+        #col-in-progress { animation: pulse-bg 4s infinite; }
+
+        /* Sticky Notes */
+        .note { background: var(--note-bg); border-radius: 8px; padding: 12px; box-shadow: var(--shadow); cursor: pointer; border: 1px solid var(--border-color); position: relative; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+        .note:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+        .note.dragging { opacity: 0.5; transform: scale(0.95); }
+        .note-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .note-subject { font-weight: bold; font-size: 14px; word-break: break-word; }
+        .note-desc { font-size: 12px; opacity: 0.8; word-break: break-word; max-height: 60px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+        .note-meta { display: flex; justify-content: space-between; align-items: center; font-size: 10px; opacity: 0.7; margin-top: auto; }
+        .note-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+        .tag { background: var(--col-bg); padding: 2px 6px; border-radius: 4px; font-size: 9px; text-transform: uppercase; }
+        
+        /* Priority Styles */
+        .note.priority-urgent { border-left: 4px solid var(--urgent-color); }
+        .note.priority-urgent .note-subject { color: var(--urgent-color); }
+        
+        /* Done Styles */
+        .note.status-done { background: rgba(52, 199, 89, 0.1); border-color: var(--done-color); }
+        .note.status-done::after { content: '✓'; position: absolute; top: 10px; right: 10px; color: var(--done-color); font-size: 20px; font-weight: bold; opacity: 0.5; }
+        
+        /* In-Progress Fill Animation */
+        .note-progress-bar { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--accent-color); width: 0%; transition: width 1s linear; }
+        .note.paused { filter: grayscale(100%); opacity: 0.7; }
+        
+        /* Chat Panel */
+        #chat-panel { position: fixed; right: -300px; top: 60px; bottom: 30px; width: 300px; background: var(--col-bg); border-left: 1px solid var(--border-color); box-shadow: -4px 0 15px rgba(0,0,0,0.1); transition: right 0.3s; display: flex; flex-direction: column; z-index: 90; }
+        #chat-panel.open { right: 0; }
+        #chat-messages { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; font-size: 12px; }
+        .chat-msg { background: var(--note-bg); padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .chat-msg strong { color: var(--accent-color); }
+        #chat-input-area { padding: 10px; display: flex; gap: 5px; border-top: 1px solid var(--border-color); }
+        #chat-input { flex: 1; }
+
+        /* Logger */
+        #logger-panel { position: fixed; bottom: 0; left: 0; right: 0; background: #000; color: #0f0; font-family: monospace; font-size: 11px; height: 30px; transition: height 0.3s; z-index: 200; display: flex; flex-direction: column; }
+        #logger-panel.expanded { height: 200px; }
+        #logger-header { display: flex; justify-content: space-between; padding: 5px 10px; cursor: pointer; background: #111; border-top: 1px solid #333; }
+        #logger-content { flex: 1; overflow-y: auto; padding: 10px; white-space: pre-wrap; display: none; }
+        #logger-panel.expanded #logger-content { display: block; }
+
+        /* Modal */
+        #modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); display: none; justify-content: center; align-items: center; z-index: 300; }
+        .modal { background: var(--bg-color); padding: 20px; border-radius: 12px; width: 400px; max-width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 15px; }
+        .modal h3 { margin-bottom: 5px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+        
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+    <!-- Top Bar -->
+    <div id="top-bar">
+        <div class="top-group">
+            <div id="users-container"></div>
+            <button onclick="app.renameSelf()">👤 Rename</button>
+        </div>
+        <div class="top-group">
+            <input type="text" id="peer-id-input" placeholder="Peer ID to connect..." style="width: 150px;">
+            <button onclick="app.connectToPeer()">Connect</button>
+            <span id="my-peer-id" style="font-size: 10px; opacity: 0.5; user-select: all;"></span>
+        </div>
+        <div class="top-group">
+            <button onclick="app.toggleTheme()">🌓 Theme</button>
+            <label style="font-size: 12px; display: flex; align-items: center; gap: 5px;">
+                <input type="checkbox" id="toggle-review" onchange="app.toggleReviewColumn(this.checked)"> Review Col
+            </label>
+            <button onclick="app.toggleChat()">💬 Chat</button>
+            <button onclick="app.exportState()">⬇️ Export</button>
+            <button onclick="document.getElementById('import-file').click()">⬆️ Import</button>
+            <input type="file" id="import-file" style="display: none;" accept=".json" onchange="app.importState(event)">
+        </div>
+    </div>
+
+    <!-- Board Area -->
+    <div id="board-container">
+        <div id="canvas-wrapper">
+            <div class="column" id="col-todo">
+                <div class="column-header">
+                    <span>TODO</span>
+                    <button onclick="app.openNoteModal()">+ Add</button>
+                </div>
+                <div class="column-content" data-status="todo"></div>
+            </div>
+            
+            <div class="column" id="col-in-progress">
+                <div class="column-header">IN PROGRESS</div>
+                <div class="column-content" data-status="in-progress"></div>
+            </div>
+
+            <div class="column" id="col-review">
+                <div class="column-header">REVIEW</div>
+                <div class="column-content" data-status="review"></div>
+            </div>
+
+            <div class="column" id="col-done">
+                <div class="column-header">DONE</div>
+                <div class="column-content" data-status="done"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Panel -->
+    <div id="chat-panel">
+        <div id="chat-messages"></div>
+        <div id="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Type message..." onkeypress="if(event.key==='Enter') app.sendChat()">
+            <button onclick="app.sendChat()">Send</button>
+        </div>
+    </div>
+
+    <!-- Logger -->
+    <div id="logger-panel">
+        <div id="logger-header" onclick="app.toggleLogger()">
+            <span>System Log (Click to expand)</span>
+            <button onclick="app.copyLogs(event)" style="padding: 2px 5px; font-size: 10px;">Copy</button>
+        </div>
+        <div id="logger-content"></div>
+    </div>
+
+    <!-- Note Modal -->
+    <div id="modal-overlay">
+        <div class="modal">
+            <h3 id="modal-title">Add Note</h3>
+            <input type="hidden" id="note-id">
+            <div class="form-group">
+                <label>Subject</label>
+                <input type="text" id="note-subject" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="note-desc" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Priority</label>
+                <select id="note-priority">
+                    <option value="default">Default</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="low">Low</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Assumed Time (Hours)</label>
+                <input type="number" id="note-time" value="1" min="0.1" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Tags (Ctrl+Click to multi-select)</label>
+                <select id="note-tags" multiple size="4" style="height: 80px;">
+                    <option value="offert">offert</option>
+                    <option value="möte">möte</option>
+                    <option value="skicka">skicka</option>
+                    <option value="brådskande">brådskande</option>
+                    <option value="granskning">granskning</option>
+                    <option value="faktura">faktura</option>
+                    <option value="design">design</option>
+                    <option value="bugg">bugg</option>
+                    <option value="SMM-post">SMM-post</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button onclick="app.closeModal()">Cancel</button>
+                <button class="primary" onclick="app.saveNote()">Save</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+/**
+ * RESILIENT CORS PROXY CONTROLLER (Mandatory Boilerplate)
+ */
+const CORS_CONFIG = {
+  providers: {
+    lovable: "https://onbkfqayveownervyktu.supabase.co/functions/v1/cors-proxy",
+    corsproxy: "https://corsproxy.io/?"
+  },
+  auth: { key: "x-proxy-key", val: "chikibriki" },
+  settings: { useProxy: true, defaultProvider: 'lovable' } 
+};
+
+async function attemptFetch(targetUrl, options = {}, useProxy = CORS_CONFIG.settings.useProxy, provider = CORS_CONFIG.settings.defaultProvider) {
+  let url = targetUrl, fetchOpts = { ...options };
+  if (useProxy) {
+    if (provider === 'lovable') {
+      url = CORS_CONFIG.providers.lovable;
+      let parsedBody = options.body;
+      try { parsedBody = options.body ? JSON.parse(options.body) : undefined; } catch(e) {}
+      fetchOpts = {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json', 
+          [CORS_CONFIG.auth.key]: CORS_CONFIG.auth.val 
+        },
+        body: JSON.stringify({ 
+          url: targetUrl, 
+          method: options.method || 'GET', 
+          headers: options.headers || {}, 
+          body: parsedBody 
+        })
+      };
+    } else if (provider === 'corsproxy') {
+      url = CORS_CONFIG.providers.corsproxy + encodeURIComponent(targetUrl);
+    }
+  }
+  const res = await fetch(url, fetchOpts);
+  if (!res.ok) throw new Error(`Fetch Error ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  return (provider === 'lovable' && useProxy && data.body) ? data.body : data;
+}
+
+async function fetchWithProxyFallback(url, options = {}) {
+  try { return await attemptFetch(url, options, CORS_CONFIG.settings.useProxy, CORS_CONFIG.settings.defaultProvider); }
+  catch (err) {
+    console.warn(`Primary fetch failed: ${err.message}. Cascading...`);
+    try { return await attemptFetch(url, options, true, 'corsproxy'); }
+    catch (fallbackErr) {
+      console.warn(`Fallback fetch failed. Attempting direct...`);
+      try { return await attemptFetch(url, options, false, null); }
+      catch (finalErr) { throw new Error(`All network attempts failed.`); }
+    }
+  }
+}
+
+/**
+ * APPLICATION LOGIC
+ */
+const Logger = {
+    log: (msg, type='INFO') => {
+        const time = new Date().toLocaleTimeString();
+        const line = `[${time}] [${type}] ${msg}`;
+        console.log(line);
+        const content = document.getElementById('logger-content');
+        content.innerHTML += `<div>${line}</div>`;
+        content.scrollTop = content.scrollHeight;
+    }
+};
+
+const app = {
+    state: {
+        notes: {},
+        users: {},
+        chat: [],
+        settings: { reviewEnabled: false }
+    },
+    myId: null,
+    peer: null,
+    connections: {},
+    inactivityTimer: null,
+    progressInterval: null,
+
+    // Pan & Zoom State
+    transform: { scale: 1, x: 0, y: 0 },
+    isPanning: false,
+    startX: 0, startY: 0,
+
+    init: async function() {
+        Logger.log("Initializing Application...");
+        this.loadState();
+        this.setupTheme();
+        this.setupPanZoom();
+        this.setupDragAndDrop();
+        this.renderAll();
+        
+        // Start Progress Loop
+        this.progressInterval = setInterval(() => this.updateProgressUI(), 1000);
+
+        // Initialize PeerJS
+        this.peer = new Peer();
+        this.peer.on('open', async (id) => {
+            this.myId = id;
+            document.getElementById('my-peer-id').innerText = `My ID: ${id}`;
+            Logger.log(`PeerJS connected. ID: ${id}`);
+            
+            // Setup local user
+            if (!this.state.users[id]) {
+                this.state.users[id] = { id, name: 'Anon_' + id.substring(0,4), ip: 'Fetching...', location: 'Fetching...' };
+            }
+            this.renderUsers();
+            await this.fetchGeoLocation();
+        });
+
+        this.peer.on('connection', (conn) => {
+            Logger.log(`Incoming connection from ${conn.peer}`);
+            this.setupConnection(conn);
+        });
+    },
+
+    // --- STATE MANAGEMENT ---
+    loadState: function() {
+        const saved = localStorage.getItem('kanban_state');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                this.state = { ...this.state, ...parsed };
+                Logger.log("State loaded from localStorage.");
+            } catch(e) { Logger.log("Failed to parse local state.", "ERROR"); }
+        }
+        document.getElementById('toggle-review').checked = this.state.settings.reviewEnabled;
+        this.toggleReviewColumn(this.state.settings.reviewEnabled, false);
+    },
+
+    saveState: function(triggerDownloadTimer = true) {
+        localStorage.setItem('kanban_state', JSON.stringify(this.state));
+        if (triggerDownloadTimer) this.resetInactivityTimer();
+    },
+
+    resetInactivityTimer: function() {
+        clearTimeout(this.inactivityTimer);
+        this.inactivityTimer = setTimeout(() => {
+            Logger.log("3 minutes of inactivity after change. Auto-downloading state.");
+            this.exportState();
+        }, 3 * 60 * 1000);
+    },
+
+    exportState: function() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state, null, 2));
+        const dlAnchorElem = document.createElement('a');
+        dlAnchorElem.setAttribute("href", dataStr);
+        dlAnchorElem.setAttribute("download", `kanban_backup_${Date.now()}.json`);
+        dlAnchorElem.click();
+        Logger.log("State exported.");
+    },
+
+    importState: function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const imported = JSON.parse(e.target.result);
+                this.state = imported;
+                this.saveState(false);
+                this.renderAll();
+                this.broadcast({ type: 'FULL_STATE', state: this.state });
+                Logger.log("State imported successfully.");
+            } catch (err) { Logger.log("Import failed: Invalid JSON", "ERROR"); }
+        };
+        reader.readAsText(file);
+    },
+
+    // --- NETWORKING & SYNC ---
+    setupConnection: function(conn) {
+        this.connections[conn.peer] = conn;
+        conn.on('open', () => {
+            Logger.log(`Connection established with ${conn.peer}`);
+            // Send full state to new peer
+            conn.send({ type: 'FULL_STATE', state: this.state });
+        });
+        conn.on('data', (data) => this.handleNetworkData(data, conn.peer));
+        conn.on('close', () => {
+            Logger.log(`Connection closed: ${conn.peer}`);
+            delete this.connections[conn.peer];
+            this.renderUsers();
+        });
+    },
+
+    connectToPeer: function() {
+        const peerId = document.getElementById('peer-id-input').value.trim();
+        if (!peerId || peerId === this.myId) return;
+        Logger.log(`Attempting to connect to ${peerId}...`);
+        const conn = this.peer.connect(peerId);
+        this.setupConnection(conn);
+        document.getElementById('peer-id-input').value = '';
+    },
+
+    broadcast: function(payload) {
+        Object.values(this.connections).forEach(conn => {
+            if (conn.open) conn.send(payload);
+        });
+    },
+
+    handleNetworkData: function(data, senderId) {
+        if (data.type === 'FULL_STATE') {
+            Logger.log(`Received full state sync from ${senderId}`);
+            // Simple merge: Last Write Wins per note
+            let changed = false;
+            for (const id in data.state.notes) {
+                const remoteNote = data.state.notes[id];
+                const localNote = this.state.notes[id];
+                if (!localNote || remoteNote.timestamps.lastModified > localNote.timestamps.lastModified) {
+                    this.state.notes[id] = remoteNote;
+                    changed = true;
+                }
+            }
+            // Merge users
+            this.state.users = { ...this.state.users, ...data.state.users };
+            // Merge chat (simple concat and sort)
+            const allChat = [...this.state.chat, ...data.state.chat];
+            this.state.chat = Array.from(new Map(allChat.map(item => [item.time, item])).values()).sort((a,b) => a.time - b.time);
+            
+            if (changed) { this.saveState(); this.renderAll(); }
+            else { this.renderUsers(); this.renderChat(); }
+        } 
+        else if (data.type === 'NOTE_UPDATE') {
+            const remoteNote = data.note;
+            const localNote = this.state.notes[remoteNote.id];
+            if (!localNote || remoteNote.timestamps.lastModified > localNote.timestamps.lastModified) {
+                this.state.notes[remoteNote.id] = remoteNote;
+                this.saveState();
+                this.renderNotes();
+            }
+        }
+        else if (data.type === 'USER_UPDATE') {
+            this.state.users[data.user.id] = data.user;
+            this.saveState();
+            this.renderUsers();
+        }
+        else if (data.type === 'CHAT') {
+            this.state.chat.push(data.msg);
+            this.saveState();
+            this.renderChat();
+        }
+    },
+
+    fetchGeoLocation: async function() {
+        try {
+            Logger.log("Fetching IP...");
+            const ipData = await fetchWithProxyFallback('https://api.ipify.org?format=json');
+            const ip = ipData.ip;
+            Logger.log(`IP found: ${ip}. Fetching location...`);
+            const geoData = await fetchWithProxyFallback(`https://ipapi.co/${ip}/json/`);
+            
+            if (this.state.users[this.myId]) {
+                this.state.users[this.myId].ip = ip;
+                this.state.users[this.myId].location = `${geoData.city || 'Unknown'}, ${geoData.country_name || 'Unknown'}`;
+                this.saveState();
+                this.renderUsers();
+                this.broadcast({ type: 'USER_UPDATE', user: this.state.users[this.myId] });
+            }
+        } catch (e) {
+            Logger.log(`GeoLocation failed: ${e.message}`, "ERROR");
+        }
+    },
+
+    // --- UI RENDERING ---
+    renderAll: function() {
+        this.renderNotes();
+        this.renderUsers();
+        this.renderChat();
+    },
+
+    renderUsers: function() {
+        const container = document.getElementById('users-container');
+        container.innerHTML = '';
+        Object.values(this.state.users).forEach(u => {
+            // Only show if it's me or an active connection
+            if (u.id === this.myId || this.connections[u.id]) {
+                const initial = u.name.charAt(0).toUpperCase();
+                const el = document.createElement('div');
+                el.className = 'user-avatar';
+                el.innerText = initial;
+                el.innerHTML += `<div class="tooltip">${u.name}<br>${u.ip}<br>${u.location}</div>`;
+                if (u.id !== this.myId) {
+                    el.onclick = () => {
+                        const nick = prompt(`Assign local nickname for ${u.name}:`, u.name);
+                        if (nick) {
+                            this.state.users[u.id].name = nick;
+                            this.saveState();
+                            this.renderUsers();
+                        }
+                    };
+                }
+                container.appendChild(el);
+            }
+        });
+    },
+
+    renderNotes: function() {
+        // Clear columns
+        document.querySelectorAll('.column-content').forEach(c => c.innerHTML = '');
+        
+        const notesArr = Object.values(this.state.notes);
+        
+        // Sort: Urgent first, then by creation date (newer at bottom)
+        notesArr.sort((a, b) => {
+            if (a.priority === 'urgent' && b.priority !== 'urgent') return -1;
+            if (a.priority !== 'urgent' && b.priority === 'urgent') return 1;
+            return a.timestamps.created - b.timestamps.created;
+        });
+
+        notesArr.forEach(note => {
+            const col = document.querySelector(`.column-content[data-status="${note.status}"]`);
+            if (!col) return;
+
+            const el = document.createElement('div');
+            el.className = `note priority-${note.priority} status-${note.status} ${note.isPaused ? 'paused' : ''}`;
+            el.draggable = true;
+            el.id = `note-${note.id}`;
+            el.dataset.id = note.id;
+
+            let tagsHtml = note.tags.map(t => `<span class="tag">${t}</span>`).join('');
+            let userHtml = '';
+            if (note.assignedUser && this.state.users[note.assignedUser] && note.assignedUser !== this.myId) {
+                const u = this.state.users[note.assignedUser];
+                userHtml = `<div class="user-avatar" style="width:20px;height:20px;font-size:10px;position:absolute;top:5px;right:5px;">${u.name.charAt(0)}</div>`;
+            }
+
+            let progressHtml = '';
+            let actionHtml = '';
+            if (note.status === 'in-progress') {
+                progressHtml = `<div class="note-progress-bar" id="prog-${note.id}"></div>`;
+                actionHtml = `<button onclick="app.togglePause('${note.id}', event)" style="padding:2px 5px; font-size:9px;">${note.isPaused ? '▶ Resume' : '⏸ Pause'}</button>`;
+            }
+
+            el.innerHTML = `
+                ${userHtml}
+                <div class="note-header">
+                    <div class="note-subject">${note.subject}</div>
+                </div>
+                ${note.desc ? `<div class="note-desc">${note.desc}</div>` : ''}
+                <div class="note-tags">${tagsHtml}</div>
+                <div class="note-meta">
+                    <span>${actionHtml}</span>
+                    <button onclick="app.deleteNote('${note.id}', event)" style="padding:2px 5px; font-size:9px; background:transparent; border:none; color:var(--urgent-color);">🗑</button>
+                </div>
+                ${progressHtml}
+            `;
+
+            el.ondblclick = () => this.openNoteModal(note.id);
+            col.appendChild(el);
+        });
+        this.updateProgressUI();
+    },
+
+    renderChat: function() {
+        const container = document.getElementById('chat-messages');
+        container.innerHTML = this.state.chat.map(c => {
+            const u = this.state.users[c.user] ? this.state.users[c.user].name : 'Unknown';
+            const time = new Date(c.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            return `<div class="chat-msg"><strong>${u}</strong> <span style="font-size:9px;opacity:0.5">${time}</span><br>${c.msg}</div>`;
+        }).join('');
+        container.scrollTop = container.scrollHeight;
+    },
+
+    // --- INTERACTIONS & LOGIC ---
+    setupPanZoom: function() {
+        const wrapper = document.getElementById('canvas-wrapper');
+        const container = document.getElementById('board-container');
+
+        container.addEventListener('wheel', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                const zoomIntensity = 0.1;
+                const wheel = e.deltaY < 0 ? 1 : -1;
+                let zoom = Math.exp(wheel * zoomIntensity);
+                this.transform.scale *= zoom;
+                this.transform.scale = Math.min(Math.max(0.5, this.transform.scale), 2);
+                this.applyTransform();
+            }
+        }, { passive: false });
+
+        container.addEventListener('mousedown', (e) => {
+            // Only pan if clicking background or column background, not notes
+            if (e.target.closest('.note')) return;
+            this.isPanning = true;
+            this.startX = e.clientX - this.transform.x;
+            this.startY = e.clientY - this.transform.y;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!this.isPanning) return;
+            this.transform.x = e.clientX - this.startX;
+            this.transform.y = e.clientY - this.startY;
+            this.applyTransform();
+        });
+
+        window.addEventListener('mouseup', () => this.isPanning = false);
+    },
+
+    applyTransform: function() {
+        const wrapper = document.getElementById('canvas-wrapper');
+        wrapper.style.transform = `translate(${this.transform.x}px, ${this.transform.y}px) scale(${this.transform.scale})`;
+    },
+
+    setupDragAndDrop: function() {
+        let draggedNoteId = null;
+
+        document.addEventListener('dragstart', (e) => {
+            const noteEl = e.target.closest('.note');
+            if (noteEl) {
+                draggedNoteId = noteEl.dataset.id;
+                noteEl.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            }
+        });
+
+        document.addEventListener('dragend', (e) => {
+            const noteEl = e.target.closest('.note');
+            if (noteEl) noteEl.classList.remove('dragging');
+            draggedNoteId = null;
+        });
+
+        document.querySelectorAll('.column-content').forEach(col => {
+            col.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+
+            col.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (!draggedNoteId) return;
+                
+                const newStatus = col.dataset.status;
+                const note = this.state.notes[draggedNoteId];
+                const oldStatus = note.status;
+
+                if (newStatus === oldStatus) return;
+
+                // Revert Check
+                if ((oldStatus === 'done' && newStatus !== 'done') || 
+                    (oldStatus === 'review' && newStatus === 'in-progress') ||
+                    (oldStatus === 'in-progress' && newStatus === 'todo')) {
+                    if (!confirm(`Revert task from ${oldStatus.toUpperCase()} to ${newStatus.toUpperCase()}?`)) return;
+                    note.timestamps.reverted = Date.now();
+                }
+
+                // Time Tracking Logic
+                if (oldStatus === 'in-progress') {
+                    // Moving out of in-progress, finalize accumulated time
+                    if (!note.isPaused) {
+                        note.accumulatedProgressTime += (Date.now() - note.timestamps.inProgress);
+                    }
+                    note.isPaused = false;
+                }
+
+                if (newStatus === 'in-progress') {
+                    note.assignedUser = this.myId;
+                    note.timestamps.inProgress = Date.now();
+                    note.isPaused = false;
+                }
+
+                if (newStatus === 'done') {
+                    note.timestamps.completed = Date.now();
+                }
+
+                note.status = newStatus;
+                note.timestamps.lastModified = Date.now();
+                
+                this.saveState();
+                this.renderNotes();
+                this.broadcast({ type: 'NOTE_UPDATE', note: note });
+                Logger.log(`Note ${note.id} moved to ${newStatus}`);
+            });
+        });
+    },
+
+    updateProgressUI: function() {
+        const now = Date.now();
+        Object.values(this.state.notes).forEach(note => {
+            if (note.status === 'in-progress') {
+                let elapsed = note.accumulatedProgressTime;
+                if (!note.isPaused && note.timestamps.inProgress) {
+                    elapsed += (now - note.timestamps.inProgress);
+                }
+                const percent = Math.min((elapsed / note.assumedTimeSpan) * 100, 100);
+                const bar = document.getElementById(`prog-${note.id}`);
+                if (bar) bar.style.width = `${percent}%`;
+            }
+        });
+    },
+
+    togglePause: function(noteId, event) {
+        event.stopPropagation();
+        const note = this.state.notes[noteId];
+        if (!note) return;
+
+        if (note.isPaused) {
+            // Resume
+            note.isPaused = false;
+            note.timestamps.inProgress = Date.now();
+        } else {
+            // Pause
+            note.isPaused = true;
+            note.accumulatedProgressTime += (Date.now() - note.timestamps.inProgress);
+        }
+        note.timestamps.lastModified = Date.now();
+        this.saveState();
+        this.renderNotes();
+        this.broadcast({ type: 'NOTE_UPDATE', note: note });
+    },
+
+    // --- MODALS & FORMS ---
+    openNoteModal: function(noteId = null) {
+        const modal = document.getElementById('modal-overlay');
+        const title = document.getElementById('modal-title');
+        
+        if (noteId && this.state.notes[noteId]) {
+            const note = this.state.notes[noteId];
+            title.innerText = 'Edit Note';
+            document.getElementById('note-id').value = note.id;
+            document.getElementById('note-subject').value = note.subject;
+            document.getElementById('note-desc').value = note.desc;
+            document.getElementById('note-priority').value = note.priority;
+            document.getElementById('note-time').value = note.assumedTimeSpan / 3600000;
+            
+            const tagSelect = document.getElementById('note-tags');
+            Array.from(tagSelect.options).forEach(opt => opt.selected = note.tags.includes(opt.value));
+        } else {
+            title.innerText = 'Add Note';
+            document.getElementById('note-id').value = '';
+            document.getElementById('note-subject').value = '';
+            document.getElementById('note-desc').value = '';
+            document.getElementById('note-priority').value = 'default';
+            document.getElementById('note-time').value = '1';
+            document.getElementById('note-tags').selectedIndex = -1;
+        }
+        modal.style.display = 'flex';
+    },
+
+    closeModal: function() {
+        document.getElementById('modal-overlay').style.display = 'none';
+    },
+
+    saveNote: function() {
+        const idInput = document.getElementById('note-id').value;
+        const isNew = !idInput;
+        const id = isNew ? 'note_' + Date.now() + Math.random().toString(36).substr(2, 5) : idInput;
+        
+        const tagSelect = document.getElementById('note-tags');
+        const selectedTags = Array.from(tagSelect.selectedOptions).map(opt => opt.value);
+        const hours = parseFloat(document.getElementById('note-time').value) || 1;
+
+        const noteData = {
+            id: id,
+            subject: document.getElementById('note-subject').value || 'Untitled',
+            desc: document.getElementById('note-desc').value,
+            priority: document.getElementById('note-priority').value,
+            tags: selectedTags,
+            assumedTimeSpan: hours * 3600000,
+            status: isNew ? 'todo' : this.state.notes[id].status,
+            assignedUser: isNew ? null : this.state.notes[id].assignedUser,
+            accumulatedProgressTime: isNew ? 0 : this.state.notes[id].accumulatedProgressTime,
+            isPaused: isNew ? false : this.state.notes[id].isPaused,
+            timestamps: isNew ? {
+                created: Date.now(), inProgress: null, completed: null, reverted: null, lastModified: Date.now()
+            } : {
+                ...this.state.notes[id].timestamps, lastModified: Date.now()
+            }
+        };
+
+        this.state.notes[id] = noteData;
+        this.saveState();
+        this.renderNotes();
+        this.broadcast({ type: 'NOTE_UPDATE', note: noteData });
+        this.closeModal();
+        Logger.log(`Note ${isNew ? 'created' : 'updated'}: ${id}`);
+    },
+
+    deleteNote: function(noteId, event) {
+        event.stopPropagation();
+        if(confirm("Delete this note permanently?")) {
+            delete this.state.notes[noteId];
+            this.saveState();
+            this.renderNotes();
+            // To sync deletion, we broadcast full state for simplicity in this architecture
+            this.broadcast({ type: 'FULL_STATE', state: this.state });
+            Logger.log(`Note deleted: ${noteId}`);
+        }
+    },
+
+    // --- UTILS & TOGGLES ---
+    setupTheme: function() {
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    },
+
+    toggleTheme: function() {
+        const current = document.documentElement.getAttribute('data-theme');
+        document.documentElement.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+    },
+
+    toggleReviewColumn: function(enabled, save = true) {
+        this.state.settings.reviewEnabled = enabled;
+        if (enabled) document.body.classList.add('review-enabled');
+        else document.body.classList.remove('review-enabled');
+        if (save) {
+            this.saveState();
+            this.broadcast({ type: 'FULL_STATE', state: this.state });
+        }
+    },
+
+    toggleChat: function() {
+        document.getElementById('chat-panel').classList.toggle('open');
+    },
+
+    sendChat: function() {
+        const input = document.getElementById('chat-input');
+        const msg = input.value.trim();
+        if (!msg) return;
+        const chatObj = { user: this.myId, msg: msg, time: Date.now() };
+        this.state.chat.push(chatObj);
+        this.saveState();
+        this.renderChat();
+        this.broadcast({ type: 'CHAT', msg: chatObj });
+        input.value = '';
+    },
+
+    renameSelf: function() {
+        const newName = prompt("Enter your name:", this.state.users[this.myId]?.name);
+        if (newName && newName.trim()) {
+            this.state.users[this.myId].name = newName.trim();
+            this.saveState();
+            this.renderUsers();
+            this.broadcast({ type: 'USER_UPDATE', user: this.state.users[this.myId] });
+        }
+    },
+
+    toggleLogger: function() {
+        document.getElementById('logger-panel').classList.toggle('expanded');
+    },
+
+    copyLogs: function(e) {
+        e.stopPropagation();
+        const text = document.getElementById('logger-content').innerText;
+        navigator.clipboard.writeText(text).then(() => alert('Logs copied!'));
+    }
+};
+
+// Boot
+window.onload = () => app.init();
+
+</script>
+</body>
+</html>
