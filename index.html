@@ -2,100 +2,149 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spatial Kanban Canvas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Trodo - Spatial Kanban</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root {
+            /* Sleek Apple/Google Hybrid Palette */
             --bg-color: #f5f5f7;
             --text-color: #1d1d1f;
-            --col-bg: rgba(232, 232, 237, 0.6);
-            --note-bg: rgba(255, 255, 255, 0.9);
-            --border-color: rgba(210, 210, 215, 0.5);
+            --col-bg: rgba(232, 232, 237, 0.65);
+            --note-bg: rgba(255, 255, 255, 0.95);
+            --border-color: rgba(210, 210, 215, 0.6);
             --accent-color: #0066cc;
             --urgent-color: #ff3b30;
             --done-color: #34c759;
             --shadow: 0 8px 30px rgba(0,0,0,0.04), 0 4px 10px rgba(0,0,0,0.02);
-            --glass-blur: blur(12px);
+            --glass-blur: blur(16px);
             --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            --transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         [data-theme="dark"] {
             --bg-color: #000000;
             --text-color: #f5f5f7;
-            --col-bg: rgba(28, 28, 30, 0.6);
-            --note-bg: rgba(44, 44, 46, 0.9);
-            --border-color: rgba(72, 72, 74, 0.4);
+            --col-bg: rgba(28, 28, 30, 0.7);
+            --note-bg: rgba(44, 44, 46, 0.95);
+            --border-color: rgba(72, 72, 74, 0.5);
             --accent-color: #0a84ff;
-            --shadow: 0 8px 30px rgba(0,0,0,0.4), 0 4px 10px rgba(0,0,0,0.2);
+            --shadow: 0 8px 30px rgba(0,0,0,0.5), 0 4px 10px rgba(0,0,0,0.3);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: var(--font-family); background: var(--bg-color); color: var(--text-color); overflow: hidden; display: flex; flex-direction: column; height: 100vh; transition: background-color 0.3s, color 0.3s; }
+        body { font-family: var(--font-family); background: var(--bg-color); color: var(--text-color); overflow: hidden; display: flex; flex-direction: column; height: 100vh; transition: background-color 0.3s, color 0.3s; padding-bottom: env(safe-area-inset-bottom, 20px); }
         
         button { cursor: pointer; border: none; background: var(--col-bg); color: var(--text-color); padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; transition: var(--transition); border: 1px solid var(--border-color); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); }
-        button:hover { filter: brightness(1.15); transform: translateY(-1px); }
+        button:hover { filter: brightness(1.15); transform: scale(1.02); }
+        button:active { transform: scale(0.98); }
         button.primary { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+        
         input, select, textarea { background: var(--col-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; font-family: inherit; font-size: 13px; outline: none; transition: border-color 0.2s; }
         input:focus, select:focus, textarea:focus { border-color: var(--accent-color); }
         
-        /* Top Bar */
-        #top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: transparent; z-index: 100; position: absolute; top:0; left:0; right:0; }
+        /* Top Bar Layout */
+        #top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: transparent; z-index: 100; position: absolute; top:0; left:0; right:0; padding-top: env(safe-area-inset-top, 15px); }
         .top-group { display: flex; align-items: center; gap: 12px; background: var(--col-bg); padding: 6px 12px; border-radius: 12px; backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--border-color); box-shadow: var(--shadow); }
         
-        .id-display { font-size: 11px; opacity: 0.6; cursor: text; padding: 2px 5px; border-radius: 4px; transition: background 0.2s; }
-        .id-display:hover { background: rgba(128,128,128,0.2); }
+        /* Brand Logo */
+        .brand-logo { font-size: 18px; font-weight: 800; background: linear-gradient(45deg, var(--accent-color), #b266ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px; margin-right: 10px; }
 
-        /* User Avatar Top Right */
-        #users-container { display: flex; gap: 6px; align-items: center; }
-        .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; cursor: pointer; position: relative; border: 2px solid var(--bg-color); box-shadow: var(--shadow); transition: transform 0.2s; }
-        .user-avatar:hover { transform: scale(1.1); }
-        .user-avatar .tooltip { visibility: hidden; position: absolute; top: 110%; right: 0; background: var(--text-color); color: var(--bg-color); padding: 6px 10px; border-radius: 6px; font-size: 11px; white-space: nowrap; z-index: 1000; opacity: 0; transition: opacity 0.2s; font-weight: normal; }
+        .id-display { font-size: 11px; opacity: 0.7; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: background 0.2s; font-family: monospace; border: 1px dashed transparent; }
+        .id-display:hover { background: rgba(128,128,128,0.2); border-color: var(--border-color); }
+
+        #users-container { display: flex; gap: 6px; align-items: center; margin-left: 5px; }
+        .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; cursor: pointer; position: relative; border: 2px solid var(--bg-color); box-shadow: var(--shadow); transition: transform 0.2s; }
+        .user-avatar:hover { transform: scale(1.15); z-index: 10; }
+        .user-avatar .tooltip { visibility: hidden; position: absolute; top: 110%; right: 0; background: var(--text-color); color: var(--bg-color); padding: 6px 10px; border-radius: 6px; font-size: 11px; white-space: nowrap; opacity: 0; transition: opacity 0.2s; font-weight: normal; }
         .user-avatar:hover .tooltip { visibility: visible; opacity: 1; }
 
         /* Board Area */
         #board-container { flex: 1; overflow: hidden; position: relative; cursor: grab; margin-top: 70px; }
         #board-container:active { cursor: grabbing; }
-        #canvas-wrapper { display: flex; gap: 24px; padding: 20px 40px; min-width: 1200px; height: calc(100% - 40px); transform-origin: 0 0; transition: transform 0.05s linear; }
+        #canvas-wrapper { display: flex; gap: 24px; padding: 20px 40px; min-width: 100%; width: max-content; height: calc(100% - 40px); transform-origin: 0 0; transition: transform 0.05s linear; }
         
         /* Columns */
-        .column { background: var(--col-bg); border-radius: 16px; display: flex; flex-direction: column; padding: 20px; gap: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); transition: flex-basis 0.3s ease; }
-        .column-header { font-weight: 600; font-size: 13px; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; color: var(--text-color); opacity: 0.9; }
-        .column-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; min-height: 200px; padding-bottom: 20px; }
+        .column { background: var(--col-bg); border-radius: 16px; display: flex; flex-direction: column; padding: 18px; gap: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); transition: flex-basis 0.3s ease; width: 320px; flex-shrink: 0; }
+        .column-header { font-weight: 600; font-size: 13px; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; color: var(--text-color); position: relative; min-height: 24px; }
+        .column-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; min-height: 200px; padding-bottom: 20px; }
         
-        #col-todo, #col-done { flex: 1 1 25%; }
-        #col-in-progress { flex: 1 1 50%; position: relative; overflow: hidden; }
-        #col-review { flex: 1 1 25%; display: none; }
-        body.review-enabled .column { flex: 1 1 25% !important; }
-        body.review-enabled #col-review { display: flex; }
+        /* PC Ratios via Flex */
+        @media (min-width: 1024px) {
+            .column { width: auto; flex-shrink: 1; }
+            #col-todo, #col-done { flex: 1 1 25%; }
+            #col-in-progress { flex: 1 1 50%; }
+            #col-review { flex: 1 1 25%; display: none; }
+            body.review-enabled .column { flex: 1 1 25% !important; }
+            body.review-enabled #col-review { display: flex; }
+        }
+        @media (max-width: 1023px) {
+            #board-container { overflow-x: auto; overflow-y: hidden; cursor: default; }
+            #col-review { display: none; }
+            body.review-enabled #col-review { display: flex; }
+        }
 
-        @keyframes pulse-bg { 0% { box-shadow: inset 0 0 0 0 rgba(10, 132, 255, 0.05); } 50% { box-shadow: inset 0 0 30px 10px rgba(10, 132, 255, 0.1); } 100% { box-shadow: inset 0 0 0 0 rgba(10, 132, 255, 0.05); } }
-        #col-in-progress { animation: pulse-bg 4s infinite; }
+        /* Column Top Loader (In Progress) */
+        .col-loader { width: 70px; height: 10px; box-shadow: 0 2px 0 var(--text-color); position: absolute; left: 50%; transform: translateX(-50%); display: none; clip-path: inset(-60px 0 -5px); opacity: 0.5; }
+        .col-loader:after { content: ""; position: relative; background: repeating-linear-gradient(90deg, transparent 0 calc(50% - 6px), var(--text-color) 0 calc(50% + 6px), transparent 0 100%) 0 0/calc(100%/3) 100%; animation: l6-1 1s infinite; }
+        .col-loader:before { content: ""; position: absolute; width: 10px; aspect-ratio: 1; left: calc(50% - 5px); bottom: 0; border-radius: 50%; background: var(--accent-color); animation: l6-2 1s infinite; z-index: 2;}
+        @keyframes l6-1 { 50%,100% {background-position: calc(100%/2) 0} }
+        @keyframes l6-2 { 0%,50% {transform:translateY(-15px)} }
 
         /* Sticky Notes */
-        .note { background: var(--note-bg); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); cursor: pointer; border: 1px solid var(--border-color); position: relative; transition: transform 0.2s, box-shadow 0.2s, outline 0.1s; display: flex; flex-direction: column; gap: 10px; overflow: hidden; backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); }
-        .note:hover, .note.hover-focus { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); outline: 2px solid var(--accent-color); outline-offset: -2px; }
-        .note.dragging { opacity: 0.4; transform: scale(0.95); }
+        .note { background: var(--note-bg); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); cursor: pointer; border: 1px solid var(--border-color); position: relative; transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s, outline 0.1s; display: flex; flex-direction: column; gap: 8px; overflow: hidden; backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); z-index: 1; }
+        
+        /* Fixed Hover (No crashing) */
+        .note:hover, .note.hover-focus { transform: scale(1.02); box-shadow: 0 16px 32px rgba(0,0,0,0.15); z-index: 2; }
+        .note.dragging { opacity: 0.4; transform: scale(0.95); z-index: 0; }
+        
         .note-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .note-subject { font-weight: 600; font-size: 15px; word-break: break-word; outline: none; }
-        .note-desc { font-size: 13px; opacity: 0.75; word-break: break-word; outline: none; }
+        .note-subject { font-weight: 600; font-size: 14px; word-break: break-word; outline: none; border-radius: 4px; transition: background 0.2s; }
+        .note-desc { font-size: 12px; opacity: 0.75; word-break: break-word; outline: none; border-radius: 4px; transition: background 0.2s; }
+        .note-subject.editing, .note-desc.editing { background: rgba(128,128,128,0.1); padding: 4px; box-shadow: inset 0 0 0 1px var(--accent-color); cursor: text; }
+        
         .note-desc:not(.editing) { max-height: 60px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
-        .note-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; opacity: 0.6; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color); }
-        .note-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-        .tag { background: rgba(128,128,128,0.15); padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 500; }
+        .note-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; opacity: 0.6; margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--border-color); }
+        .note-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+        .tag { background: rgba(128,128,128,0.15); padding: 3px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
         
         .note.priority-urgent { border-left: 4px solid var(--urgent-color); }
         .note.status-done { background: rgba(52, 199, 89, 0.05); border-color: rgba(52, 199, 89, 0.3); }
-        .note-progress-bar { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--accent-color); width: 0%; transition: width 1s linear; }
-        .note.paused { filter: grayscale(100%); opacity: 0.6; }
+        .note.paused { filter: grayscale(100%); opacity: 0.7; }
+
+        /* Dynamic Progress Bar (Combined l16 & l7 logic) */
+        .progress-wrapper { position: absolute; bottom: 0; left: 0; right: 0; height: 5px; background: rgba(128,128,128,0.1); }
+        .progress-fill { position: absolute; top: 0; left: 0; height: 100%; width: var(--p, 0%); background: var(--accent-color); transition: width 1s linear; }
+        .progress-mask {
+            position: absolute; inset: 0;
+            -webkit-mask: radial-gradient(circle closest-side, #000 90%, #0000) 0 0/var(--dot-size, 20%) 100%, linear-gradient(#000 0 0) center/calc(100% - 6px) 100% no-repeat;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            background-size: 200% 100%; animation: p-shimmer 2s infinite linear; pointer-events: none;
+        }
+        @keyframes p-shimmer { 0% {background-position: 200% 0;} 100% {background-position: -200% 0;} }
+
+        /* Status Animations (Mini Loaders bottom right) */
+        .mini-loader { position: absolute; bottom: 15px; right: 15px; width: 14px; aspect-ratio: 1; display: none; }
+        
+        /* Urgent: 4 dots spinning */
+        .l-urgent { --_g: no-repeat radial-gradient(circle closest-side, currentColor 90%, #0000); background: var(--_g) 0 0, var(--_g) 0 100%, var(--_g) 100% 100%; background-size: 35% 35%; animation: l11 1s infinite linear; color: var(--urgent-color); }
+        @keyframes l11 { 25% {background-position:100% 0, 0 100%, 100% 100%} 50% {background-position:100% 0, 0 0, 100% 100%} 75% {background-position:100% 0, 0 0, 0 100%} 100%{background-position:100% 100%, 0 0, 0 100%} }
+        
+        /* Default: 4 dots pulsing */
+        .l-default { --_g: no-repeat radial-gradient(farthest-side, currentColor 94%, #0000); background: var(--_g) 0 0, var(--_g) 100% 0, var(--_g) 100% 100%, var(--_g) 0 100%; background-size: 40% 40%; animation: l38 .5s infinite; color: var(--accent-color); }
+        @keyframes l38 { 100% {background-position: 100% 0, 100% 100%, 0 100%, 0 0} }
+        
+        /* Low: 3 dots spinning */
+        .l-low { width: 16px; aspect-ratio: 1.154; --_g: no-repeat radial-gradient(farthest-side, currentColor 90%, #0000); background: var(--_g) 50% 0, var(--_g) 0 100%, var(--_g) 100% 100%; background-size: 35% calc(35%*1.154); animation: l16 1s infinite; color: var(--text-color); opacity: 0.5; }
+        @keyframes l16 { 50%,100% {background-position: 100% 100%, 50% 0, 0 100%} }
+
 
         /* Floating Chat */
-        #chat-fab { position: fixed; bottom: 30px; right: 30px; width: 56px; height: 56px; border-radius: 50%; background: var(--accent-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 10px 20px rgba(10, 132, 255, 0.4); cursor: pointer; z-index: 200; transition: transform 0.2s; border: none; }
+        #chat-fab { position: fixed; bottom: max(30px, env(safe-area-inset-bottom)); right: 30px; width: 56px; height: 56px; border-radius: 50%; background: var(--accent-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 10px 20px rgba(10, 132, 255, 0.4); cursor: pointer; z-index: 200; transition: transform 0.2s; border: none; }
         #chat-fab:hover { transform: scale(1.1); }
         #chat-badge { position: absolute; top: 0; right: 0; width: 16px; height: 16px; background: var(--urgent-color); border-radius: 50%; display: none; border: 2px solid var(--bg-color); }
         
-        #chat-panel { position: fixed; right: 30px; bottom: 100px; width: 320px; height: 400px; background: var(--col-bg); border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); display: flex; flex-direction: column; z-index: 190; transform: scale(0.9); opacity: 0; pointer-events: none; transition: var(--transition); transform-origin: bottom right; }
+        #chat-panel { position: fixed; right: 30px; bottom: calc(max(30px, env(safe-area-inset-bottom)) + 70px); width: 320px; height: 400px; background: var(--col-bg); border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); display: flex; flex-direction: column; z-index: 190; transform: scale(0.9); opacity: 0; pointer-events: none; transition: var(--transition); transform-origin: bottom right; }
         #chat-panel.open { transform: scale(1); opacity: 1; pointer-events: auto; }
         #chat-messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
         .chat-msg { background: var(--note-bg); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border-color); width: fit-content; max-width: 90%; }
@@ -104,76 +153,100 @@
         #chat-input-area { padding: 12px; display: flex; gap: 8px; border-top: 1px solid var(--border-color); }
         #chat-input { flex: 1; }
 
-        /* Logger */
-        #logger-panel { position: fixed; bottom: 0; left: 0; right: 0; background: var(--col-bg); color: var(--text-color); font-family: monospace; font-size: 11px; height: 35px; transition: height 0.3s; z-index: 150; display: flex; flex-direction: column; backdrop-filter: var(--glass-blur); border-top: 1px solid var(--border-color); }
-        #logger-panel.expanded { height: 200px; }
-        #logger-header { display: flex; justify-content: space-between; padding: 8px 15px; cursor: pointer; border-bottom: 1px solid var(--border-color); opacity: 0.7; }
-        #logger-content { flex: 1; overflow-y: auto; padding: 10px 15px; white-space: pre-wrap; display: none; }
-        #logger-panel.expanded #logger-content { display: block; }
+        /* Logger (Top Right Hidden Window) */
+        #logger-window { position: fixed; top: 70px; right: 25px; width: 400px; max-height: 300px; background: rgba(0,0,0,0.85); color: #0f0; font-family: monospace; font-size: 11px; border-radius: 12px; z-index: 250; display: none; flex-direction: column; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow); backdrop-filter: blur(10px); }
+        #logger-header { padding: 8px 12px; display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); color: #fff; }
+        #logger-content { flex: 1; overflow-y: auto; padding: 10px; white-space: pre-wrap; }
 
-        /* Modals */
-        #modal-overlay, #qr-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 300; }
-        .modal { background: var(--bg-color); padding: 30px; border-radius: 20px; width: 450px; max-width: 90%; box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 18px; }
-        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        /* Custom Dialogs & Modals */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 500; opacity: 0; transition: opacity 0.2s; }
+        .overlay.active { display: flex; opacity: 1; }
+        .modal { background: var(--bg-color); padding: 25px; border-radius: 20px; width: 420px; max-width: 90%; box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
         .form-group label { font-size: 12px; font-weight: 600; opacity: 0.8; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 5px; }
 
-        /* Color Picker Row */
+        /* Custom Toast */
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 1000; pointer-events: none; }
+        .toast { background: var(--text-color); color: var(--bg-color); padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 500; box-shadow: 0 5px 15px rgba(0,0,0,0.2); animation: toast-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes toast-in { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes toast-out { to { transform: translateY(-20px); opacity: 0; } }
+
+        /* Color Picker */
         .color-swatches { display: flex; gap: 8px; align-items: center; }
         .swatch { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
         .swatch:hover { transform: scale(1.2); }
-        .swatch.selected { border-color: var(--text-color); }
+        .swatch.selected { border-color: var(--text-color); box-shadow: 0 0 0 2px var(--bg-color) inset; }
 
         /* Context Menu */
-        #context-menu { position: absolute; background: var(--col-bg); backdrop-filter: var(--glass-blur); border: 1px solid var(--border-color); box-shadow: var(--shadow); border-radius: 8px; padding: 5px; display: none; flex-direction: column; min-width: 150px; z-index: 400; }
-        #context-menu button { background: transparent; border: none; text-align: left; padding: 8px 12px; border-radius: 4px; box-shadow: none; font-size: 13px; }
+        #context-menu { position: absolute; background: var(--col-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--border-color); box-shadow: var(--shadow); border-radius: 12px; padding: 6px; display: none; flex-direction: column; min-width: 160px; z-index: 400; }
+        #context-menu button { background: transparent; border: none; text-align: left; padding: 10px 12px; border-radius: 6px; box-shadow: none; font-size: 13px; margin: 1px 0; }
         #context-menu button:hover { background: var(--accent-color); color: white; }
         #context-menu button.danger:hover { background: var(--urgent-color); }
 
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 3px; }
     </style>
 </head>
 <body>
 
     <div id="top-bar">
-        <div class="top-group">
-            <button onclick="app.toggleTheme()" style="background: transparent; border: none; box-shadow: none; font-size:16px;">🌓</button>
-            <label style="font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                <input type="checkbox" id="toggle-review" onchange="app.toggleReviewColumn(this.checked)"> Review
-            </label>
-        </div>
-
-        <div class="top-group">
-            <input type="text" id="peer-id-input" placeholder="Join ID..." style="width: 120px; padding: 6px;">
-            <button onclick="app.connectToPeer()">Join</button>
-            <div style="border-left: 1px solid var(--border-color); height: 20px; margin: 0 5px;"></div>
-            <span class="id-display" onclick="app.editMyId()" title="Click to change ID" id="my-peer-id">...</span>
-            <button onclick="app.showQR()" style="background: transparent; border: none; box-shadow: none;" title="Share Link">🔗</button>
+        <div class="top-group" style="background: transparent; border: none; box-shadow: none;">
+            <div class="brand-logo">Trodo</div>
+            <div class="top-group">
+                <input type="text" id="peer-id-input" placeholder="Join ID..." style="width: 110px; padding: 6px;">
+                <button onclick="app.connectToPeer()">Join</button>
+                <div style="border-left: 1px solid var(--border-color); height: 20px; margin: 0 2px;"></div>
+                <span class="id-display" onclick="app.editMyId()" title="Change Session ID" id="my-peer-id">...</span>
+                <button onclick="app.showQR()" style="background: transparent; border: none; box-shadow: none; padding:4px;" title="Share Link">🔗</button>
+            </div>
         </div>
 
         <div class="top-group" style="background: transparent; border: none; box-shadow: none;">
-            <button onclick="app.exportState()">⬇️</button>
-            <button onclick="document.getElementById('import-file').click()">⬆️</button>
-            <input type="file" id="import-file" style="display: none;" accept=".json" onchange="app.importState(event)">
-            
-            <div id="users-container" style="margin-left: 10px;"></div>
+            <div class="top-group">
+                <button onclick="app.toggleTheme()" style="background:transparent; border:none; box-shadow:none; font-size:16px; padding:4px;">🌓</button>
+                <label style="font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="toggle-review" onchange="app.toggleReviewColumn(this.checked)"> Review
+                </label>
+                <div style="border-left: 1px solid var(--border-color); height: 20px; margin: 0 2px;"></div>
+                <button onclick="app.exportState()" style="background:transparent; border:none; box-shadow:none; padding:4px;" title="Export JSON">⬇️</button>
+                <button onclick="document.getElementById('import-file').click()" style="background:transparent; border:none; box-shadow:none; padding:4px;" title="Import JSON">⬆️</button>
+                <input type="file" id="import-file" style="display: none;" accept=".json" onchange="app.importState(event)">
+                <button onclick="app.toggleLogger()" style="background:transparent; border:none; box-shadow:none; padding:4px;" title="Console Logs">📋</button>
+            </div>
+            <div id="users-container"></div>
         </div>
     </div>
+
+    <div id="logger-window">
+        <div id="logger-header">
+            <span>System Logs</span>
+            <div>
+                <button onclick="app.copyLogs(event)" style="padding: 2px 6px; font-size: 10px; background:transparent; border:1px solid #555; color:#fff;">Copy</button>
+                <button onclick="app.toggleLogger()" style="padding: 2px 6px; font-size: 10px; background:transparent; border:none; color:#fff;">✕</button>
+            </div>
+        </div>
+        <div id="logger-content"></div>
+    </div>
+
+    <div id="toast-container"></div>
 
     <div id="board-container">
         <div id="canvas-wrapper">
             <div class="column" id="col-todo">
                 <div class="column-header">
                     <span>TODO</span>
-                    <button onclick="app.openNoteModal()" class="primary" style="padding: 4px 10px;">+</button>
+                    <button onclick="app.openNoteModal()" class="primary" style="padding: 4px 10px; border-radius: 6px;">+</button>
                 </div>
                 <div class="column-content" data-status="todo"></div>
             </div>
             
             <div class="column" id="col-in-progress">
-                <div class="column-header">IN PROGRESS</div>
+                <div class="column-header">
+                    <span>IN PROGRESS</span>
+                    <div class="col-loader" id="main-progress-loader"></div>
+                </div>
                 <div class="column-content" data-status="in-progress"></div>
             </div>
 
@@ -189,25 +262,17 @@
         </div>
     </div>
 
-    <button id="chat-fab" onclick="app.toggleChat()">
-        💬<div id="chat-badge"></div>
-    </button>
+    <button id="chat-fab" onclick="app.toggleChat()">💬<div id="chat-badge"></div></button>
 
     <div id="chat-panel">
-        <div style="padding: 15px; font-weight: bold; border-bottom: 1px solid var(--border-color);">Team Chat</div>
+        <div style="padding: 15px; font-weight: bold; border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+            Team Chat <span onclick="app.toggleChat()" style="cursor:pointer; opacity:0.5; font-size:12px;">✕</span>
+        </div>
         <div id="chat-messages"></div>
         <div id="chat-input-area">
             <input type="text" id="chat-input" placeholder="Message..." onkeypress="if(event.key==='Enter') app.sendChat()">
             <button onclick="app.sendChat()" class="primary">></button>
         </div>
-    </div>
-
-    <div id="logger-panel">
-        <div id="logger-header" onclick="app.toggleLogger()">
-            <span>Console Log</span>
-            <button onclick="app.copyLogs(event)" style="padding: 2px 8px; font-size: 10px; background:transparent;">Copy</button>
-        </div>
-        <div id="logger-content"></div>
     </div>
 
     <div id="context-menu">
@@ -217,23 +282,31 @@
         <button class="danger" onclick="app.ctxDelete()">🗑 Delete</button>
     </div>
 
-    <div id="qr-modal-overlay" onclick="if(event.target===this) this.style.display='none'">
-        <div class="modal" style="align-items: center; width: 300px;">
-            <h3>Invite Team</h3>
-            <p style="font-size: 12px; opacity: 0.7; text-align: center;">Scan to join or share this URL directly.</p>
-            <img id="qr-image" src="" alt="QR Code" style="width: 200px; height: 200px; border-radius: 8px; background: white; padding: 10px;">
-            <input type="text" id="share-url" readonly style="width: 100%; text-align: center; font-size: 11px;" onclick="this.select(); document.execCommand('copy'); alert('Copied!');">
-            <button onclick="document.getElementById('qr-modal-overlay').style.display='none'" style="width:100%">Close</button>
+    <div id="dialog-overlay" class="overlay">
+        <div class="modal" style="width: 350px;">
+            <h3 id="dialog-title">Prompt</h3>
+            <p id="dialog-msg" style="font-size: 13px; opacity: 0.8;"></p>
+            <input type="text" id="dialog-input" style="display:none; width:100%;">
+            
+            <div id="dialog-qr-view" style="display:none; text-align:center; margin-top: 10px;">
+                <img id="qr-image" src="" alt="QR" style="width: 180px; height: 180px; border-radius: 8px; background: white; padding: 10px; margin-bottom:10px;">
+                <input type="text" id="share-url" readonly style="width: 100%; text-align: center; font-size: 11px; cursor:pointer;" onclick="this.select(); document.execCommand('copy'); app.toast('URL Copied!');">
+            </div>
+
+            <div class="modal-actions" style="margin-top: 15px;">
+                <button id="dialog-cancel">Cancel</button>
+                <button id="dialog-ok" class="primary">Confirm</button>
+            </div>
         </div>
     </div>
 
-    <div id="modal-overlay" onmousedown="if(event.target===this) app.closeModal()">
+    <div id="modal-overlay" class="overlay" onmousedown="if(event.target===this) app.closeModal()">
         <div class="modal">
             <h3 id="modal-title">Edit Card</h3>
             <input type="hidden" id="note-id">
             
             <div class="form-group">
-                <input type="text" id="note-subject" placeholder="Subject..." style="font-size: 16px; font-weight: bold;" required>
+                <input type="text" id="note-subject" placeholder="Subject..." style="font-size: 16px; font-weight: 600;" required>
             </div>
             
             <div class="form-group">
@@ -252,26 +325,26 @@
                 <div class="form-group" style="flex:1;">
                     <label>Color</label>
                     <div class="color-swatches">
-                        <div class="swatch" style="background:var(--note-bg);" onclick="app.selectColor(this, '')"></div>
-                        <div class="swatch" style="background:#ffb3ba;" onclick="app.selectColor(this, '#ffb3ba')"></div>
-                        <div class="swatch" style="background:#baffc9;" onclick="app.selectColor(this, '#baffc9')"></div>
-                        <div class="swatch" style="background:#bae1ff;" onclick="app.selectColor(this, '#bae1ff')"></div>
+                        <div class="swatch selected" style="background:var(--note-bg);" onclick="app.selectColor(this, '')"></div>
+                        <div class="swatch" style="background:rgba(255, 59, 48, 0.15);" onclick="app.selectColor(this, 'rgba(255, 59, 48, 0.15)')"></div>
+                        <div class="swatch" style="background:rgba(52, 199, 89, 0.15);" onclick="app.selectColor(this, 'rgba(52, 199, 89, 0.15)')"></div>
+                        <div class="swatch" style="background:rgba(0, 102, 204, 0.15);" onclick="app.selectColor(this, 'rgba(0, 102, 204, 0.15)')"></div>
                         <input type="color" id="note-color-picker" style="width: 24px; height: 24px; padding:0; border:none; border-radius:50%; cursor:pointer;" onchange="app.selectColor(null, this.value)">
                     </div>
                 </div>
             </div>
 
             <div class="form-group">
-                <label style="display:flex; align-items:center; gap:8px;">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
                     <input type="checkbox" id="enable-time" onchange="document.getElementById('note-time').disabled = !this.checked">
-                    Estimated Time (Hours)
+                    Set Estimated Time
                 </label>
-                <input type="number" id="note-time" value="1" min="0.1" step="0.1" disabled>
+                <input type="number" id="note-time" value="1" min="0.1" step="0.1" disabled placeholder="Hours">
             </div>
 
             <div class="form-group">
-                <label>Tags (Optional)</label>
-                <select id="note-tags" multiple size="3" style="height: 70px;">
+                <label>Tags (Optional - Ctrl+Click)</label>
+                <select id="note-tags" multiple size="3" style="height: 75px;">
                     <option value="offert">offert</option>
                     <option value="möte">möte</option>
                     <option value="skicka">skicka</option>
@@ -293,28 +366,25 @@
 
 <script>
 /**
- * RESILIENT CORS PROXY CONTROLLER
+ * RESILIENT CORS PROXY CONTROLLER (Boilerplate embedded)
  */
 const CORS_CONFIG = {
   providers: { lovable: "https://onbkfqayveownervyktu.supabase.co/functions/v1/cors-proxy", corsproxy: "https://corsproxy.io/?" },
-  auth: { key: "x-proxy-key", val: "chikibriki" },
-  settings: { useProxy: true, defaultProvider: 'lovable' } 
+  settings: { useProxy: true } 
 };
-
-async function fetchWithProxyFallback(url, options = {}) {
-  // Simplified for brevity, standard cascade applies internally
-  try {
-      const res = await fetch(CORS_CONFIG.providers.corsproxy + encodeURIComponent(url));
-      return await res.json();
-  } catch(e) { return null; }
+async function fetchWithProxyFallback(url) {
+  try { const res = await fetch(CORS_CONFIG.providers.corsproxy + encodeURIComponent(url)); return await res.json(); } catch(e) { return null; }
 }
 
 const Logger = {
     log: (msg, type='INFO') => {
         const time = new Date().toLocaleTimeString();
         const content = document.getElementById('logger-content');
-        content.innerHTML += `<div>[${time}] [${type}] ${msg}</div>`;
-        content.scrollTop = content.scrollHeight;
+        if(content) {
+            content.innerHTML += `<div><span style="color:#888;">[${time}]</span> <span style="color:${type==='ERROR'?'#f55':'#0f0'};">[${type}]</span> ${msg}</div>`;
+            content.scrollTop = content.scrollHeight;
+        }
+        console.log(`[${type}] ${msg}`);
     }
 };
 
@@ -325,8 +395,7 @@ const app = {
     transform: { scale: 1, x: 0, y: 0 },
     isPanning: false, startX: 0, startY: 0,
     hoveredNoteId: null, ctxNoteId: null,
-    unreadChat: 0,
-    selectedColor: '',
+    unreadChat: 0, selectedColor: '',
 
     init: async function() {
         this.loadState();
@@ -337,67 +406,109 @@ const app = {
         this.renderAll();
         setInterval(() => this.updateProgressUI(), 1000);
 
-        // Global click listener to close context menu
+        // Click outside context menu to close
         document.addEventListener('click', (e) => {
-            if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display = 'none';
+            if(!e.target.closest('#context-menu') && e.button !== 2) {
+                document.getElementById('context-menu').style.display = 'none';
+            }
         });
 
-        // URL Parsing
         const urlParams = new URLSearchParams(window.location.search);
-        const forceRoom = urlParams.get('room');
-        const customSelfId = urlParams.get('myid');
-
-        this.initPeer(customSelfId, forceRoom);
+        this.initPeer(urlParams.get('myid'), urlParams.get('room'));
     },
 
+    // --- DOM MODAL & UI UTILS ---
+    toast: function(msg) {
+        const c = document.getElementById('toast-container');
+        const t = document.createElement('div');
+        t.className = 'toast'; t.innerText = msg;
+        c.appendChild(t);
+        setTimeout(() => { t.style.animation = 'toast-out 0.3s forwards'; setTimeout(()=>t.remove(), 300); }, 3000);
+    },
+
+    dialog: function({title, msg, type='alert', defaultVal='', showQR=null}, callback) {
+        const over = document.getElementById('dialog-overlay');
+        const okBtn = document.getElementById('dialog-ok');
+        const cancelBtn = document.getElementById('dialog-cancel');
+        const input = document.getElementById('dialog-input');
+        const qrView = document.getElementById('dialog-qr-view');
+        
+        document.getElementById('dialog-title').innerText = title;
+        document.getElementById('dialog-msg').innerText = msg;
+        document.getElementById('dialog-msg').style.display = msg ? 'block' : 'none';
+        
+        input.style.display = type === 'prompt' ? 'block' : 'none';
+        input.value = defaultVal;
+        cancelBtn.style.display = (type === 'alert' && !showQR) ? 'none' : 'block';
+        qrView.style.display = showQR ? 'block' : 'none';
+
+        if(showQR) {
+            document.getElementById('qr-image').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(showQR)}`;
+            document.getElementById('share-url').value = showQR;
+            okBtn.style.display = 'none'; // Only close/cancel for QR
+            cancelBtn.innerText = 'Close';
+        } else {
+            okBtn.style.display = 'block';
+            cancelBtn.innerText = 'Cancel';
+        }
+
+        const close = () => { over.classList.remove('active'); setTimeout(()=>over.style.display='none', 200); };
+        
+        over.style.display = 'flex';
+        // Force reflow for animation
+        void over.offsetWidth; 
+        over.classList.add('active');
+
+        if(type === 'prompt') input.focus();
+
+        okBtn.onclick = () => { close(); if(callback) callback(type === 'prompt' ? input.value : true); };
+        cancelBtn.onclick = () => { close(); if(callback) callback(type === 'prompt' ? null : false); };
+    },
+
+    confirm: function(msg, callback) { this.dialog({title: 'Confirm Action', msg, type: 'confirm'}, res => { if(res) callback(); }); },
+    promptUser: function(title, msg, defaultVal, callback) { this.dialog({title, msg, type: 'prompt', defaultVal}, callback); },
+
+    // --- PEER JS ---
     initPeer: function(customId = null, autoConnectTo = null) {
         if(this.peer) this.peer.destroy();
-        
-        Logger.log(`Initializing PeerJS${customId ? ' with ID '+customId : ''}...`);
+        Logger.log(`Init PeerJS${customId ? ' [ID: '+customId+']' : ''}...`);
         this.peer = customId ? new Peer(customId) : new Peer();
         
         this.peer.on('error', (err) => {
             Logger.log(`Peer Error: ${err.type}`, 'ERROR');
-            if(err.type === 'unavailable-id') { alert('ID taken. Reverting to random.'); this.initPeer(); }
+            if(err.type === 'unavailable-id') { this.toast('ID taken. Using random.'); this.initPeer(); }
         });
         
         this.peer.on('open', async (id) => {
             this.myId = id;
             document.getElementById('my-peer-id').innerText = id;
-            if (!this.state.users[id]) this.state.users[id] = { id, name: 'User_' + id.substring(0,3), ip: 'Local', location: '' };
+            if (!this.state.users[id]) this.state.users[id] = { id, name: 'User_' + id.substring(0,3), ip: 'Local' };
             this.renderUsers();
             
             if(autoConnectTo && autoConnectTo !== id) {
-                setTimeout(() => { document.getElementById('peer-id-input').value = autoConnectTo; this.connectToPeer(); }, 1000);
+                setTimeout(() => { document.getElementById('peer-id-input').value = autoConnectTo; this.connectToPeer(); }, 800);
             }
+            this.fetchGeoLocation(); // Background task
         });
 
         this.peer.on('connection', (conn) => this.setupConnection(conn));
     },
 
     editMyId: function() {
-        const newId = prompt("Enter new Custom ID (Will drop current connections):", this.myId);
-        if(newId && newId.trim() !== this.myId) {
-            this.connections = {};
-            this.initPeer(newId.trim());
-        }
+        this.promptUser("Change Session ID", "Enter new ID (will drop current connections):", this.myId, val => {
+            if(val && val.trim() !== this.myId) { this.connections = {}; this.initPeer(val.trim()); }
+        });
     },
 
     showQR: function() {
-        const base = "https://nomsams.github.io/trodo/";
-        const url = `${base}?room=${this.myId}`;
-        document.getElementById('share-url').value = url;
-        document.getElementById('qr-image').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
-        document.getElementById('qr-modal-overlay').style.display = 'flex';
+        const url = `${window.location.origin}${window.location.pathname}?room=${this.myId}`;
+        this.dialog({title: "Invite Team", msg: "Scan or share this URL directly.", type: 'alert', showQR: url});
     },
 
     // --- KEYBOARD SHORTCUTS ---
     setupShortcuts: function() {
         document.addEventListener('keydown', (e) => {
-            // Context Menu Quick Edit blur on Enter
             if(e.target.isContentEditable && e.key === 'Enter') { e.target.blur(); return; }
-
-            // Skip if typing in an input
             if(['INPUT', 'TEXTAREA'].includes(e.target.tagName) && e.key !== 'Escape' && e.key !== 'Enter') return;
 
             if (e.key === 'Escape') {
@@ -406,7 +517,7 @@ const app = {
                 document.getElementById('chat-panel').classList.remove('open');
             }
             
-            if (e.key === 'Enter' && document.getElementById('modal-overlay').style.display === 'flex' && e.target.tagName !== 'TEXTAREA') {
+            if (e.key === 'Enter' && document.getElementById('modal-overlay').classList.contains('active') && e.target.tagName !== 'TEXTAREA') {
                 this.saveNote();
             }
 
@@ -417,12 +528,9 @@ const app = {
                 const cols = ['todo', 'in-progress', document.body.classList.contains('review-enabled')?'review':null, 'done'].filter(Boolean);
                 let colIdx = cols.indexOf(note.status);
 
-                if (e.key === 'ArrowRight' && colIdx < cols.length - 1) {
-                    this.moveNoteNetwork(note, cols[colIdx + 1]);
-                } else if (e.key === 'ArrowLeft' && colIdx > 0) {
-                    this.moveNoteNetwork(note, cols[colIdx - 1]);
-                } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                    // Adjust priority visually by updating order (simplified)
+                if (e.key === 'ArrowRight' && colIdx < cols.length - 1) this.moveNoteNetwork(note, cols[colIdx + 1]);
+                else if (e.key === 'ArrowLeft' && colIdx > 0) this.moveNoteNetwork(note, cols[colIdx - 1]);
+                else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                     note.orderIndex = (note.orderIndex || 0) + (e.key === 'ArrowUp' ? 1 : -1);
                     note.timestamps.lastModified = Date.now();
                     this.saveState(); this.renderNotes(); this.broadcast({type:'NOTE_UPDATE', note});
@@ -431,7 +539,7 @@ const app = {
         });
     },
 
-    // --- STATE MANAGEMENT ---
+    // --- STATE & NETWORKING ---
     loadState: function() {
         const saved = localStorage.getItem('kanban_state');
         if (saved) { try { this.state = { ...this.state, ...JSON.parse(saved) }; } catch(e){} }
@@ -441,12 +549,14 @@ const app = {
     },
     saveState: function() { localStorage.setItem('kanban_state', JSON.stringify(this.state)); },
 
-    // --- NETWORKING ---
     setupConnection: function(conn) {
         this.connections[conn.peer] = conn;
-        conn.on('open', () => conn.send({ type: 'FULL_STATE', state: this.state }));
+        conn.on('open', () => {
+            this.toast(`Connected to ${conn.peer}`);
+            conn.send({ type: 'FULL_STATE', state: this.state });
+        });
         conn.on('data', (data) => this.handleNetworkData(data, conn.peer));
-        conn.on('close', () => { delete this.connections[conn.peer]; this.renderUsers(); });
+        conn.on('close', () => { delete this.connections[conn.peer]; this.renderUsers(); this.toast(`Lost ${conn.peer}`); });
     },
     connectToPeer: function() {
         const peerId = document.getElementById('peer-id-input').value.trim();
@@ -454,9 +564,8 @@ const app = {
         this.setupConnection(this.peer.connect(peerId));
         document.getElementById('peer-id-input').value = '';
     },
-    broadcast: function(payload) {
-        Object.values(this.connections).forEach(conn => { if (conn.open) conn.send(payload); });
-    },
+    broadcast: function(payload) { Object.values(this.connections).forEach(conn => { if (conn.open) conn.send(payload); }); },
+
     handleNetworkData: function(data, senderId) {
         if (data.type === 'FULL_STATE') {
             for (const id in data.state.notes) {
@@ -467,25 +576,13 @@ const app = {
                 this.toggleReviewColumn(data.state.settings.reviewEnabled, false);
             }
             this.state.users = { ...this.state.users, ...data.state.users };
-            
-            // Dedupe chat
             const allChat = [...this.state.chat, ...data.state.chat];
             this.state.chat = Array.from(new Map(allChat.map(item => [`${item.time}_${item.user}`, item])).values()).sort((a,b) => a.time - b.time);
-            
             this.saveState(); this.renderAll();
         } 
-        else if (data.type === 'NOTE_UPDATE') {
-            this.state.notes[data.note.id] = data.note;
-            this.saveState(); this.renderNotes();
-        }
-        else if (data.type === 'NOTE_DELETED') {
-            delete this.state.notes[data.noteId];
-            this.saveState(); this.renderNotes();
-        }
-        else if (data.type === 'USER_UPDATE') {
-            this.state.users[data.user.id] = data.user;
-            this.saveState(); this.renderUsers(); this.renderChat();
-        }
+        else if (data.type === 'NOTE_UPDATE') { this.state.notes[data.note.id] = data.note; this.saveState(); this.renderNotes(); }
+        else if (data.type === 'NOTE_DELETED') { delete this.state.notes[data.noteId]; this.saveState(); this.renderNotes(); }
+        else if (data.type === 'USER_UPDATE') { this.state.users[data.user.id] = data.user; this.saveState(); this.renderUsers(); this.renderChat(); }
         else if (data.type === 'CHAT') {
             this.state.chat.push(data.msg);
             if(!document.getElementById('chat-panel').classList.contains('open')) {
@@ -496,7 +593,18 @@ const app = {
         }
     },
 
-    // --- RENDER UI ---
+    async fetchGeoLocation() {
+        const ipData = await fetchWithProxyFallback('https://api.ipify.org?format=json');
+        if(!ipData) return;
+        const geoData = await fetchWithProxyFallback(`https://ipapi.co/${ipData.ip}/json/`);
+        if(this.state.users[this.myId] && geoData) {
+            this.state.users[this.myId].ip = ipData.ip;
+            this.state.users[this.myId].location = `${geoData.city||''}, ${geoData.country_name||''}`;
+            this.saveState(); this.renderUsers(); this.broadcast({ type: 'USER_UPDATE', user: this.state.users[this.myId] });
+        }
+    },
+
+    // --- UI RENDERING ---
     renderAll: function() { this.renderNotes(); this.renderUsers(); this.renderChat(); },
 
     renderUsers: function() {
@@ -508,8 +616,11 @@ const app = {
                 const el = document.createElement('div');
                 el.className = 'user-avatar';
                 el.innerText = displayName.charAt(0).toUpperCase();
-                el.innerHTML += `<div class="tooltip">${displayName}</div>`;
+                el.innerHTML += `<div class="tooltip">${displayName}<br><span style="opacity:0.6;font-size:9px;">${u.location||''}</span></div>`;
                 if(u.id === this.myId) el.onclick = () => this.renameSelf();
+                else el.onclick = () => this.promptUser("Nickname", `Assign local nickname for ${displayName}:`, displayName, val => {
+                    if(val) { this.localNicknames[u.id] = val; localStorage.setItem('kanban_nicks', JSON.stringify(this.localNicknames)); this.renderUsers(); this.renderChat(); }
+                });
                 container.appendChild(el);
             }
         });
@@ -517,6 +628,7 @@ const app = {
 
     renderNotes: function() {
         document.querySelectorAll('.column-content').forEach(c => c.innerHTML = '');
+        let inProgressCount = 0;
         const notesArr = Object.values(this.state.notes);
         
         notesArr.sort((a, b) => {
@@ -529,6 +641,7 @@ const app = {
         notesArr.forEach(note => {
             const col = document.querySelector(`.column-content[data-status="${note.status}"]`);
             if (!col) return;
+            if (note.status === 'in-progress' && !note.isPaused) inProgressCount++;
 
             const el = document.createElement('div');
             el.className = `note priority-${note.priority} status-${note.status} ${note.isPaused ? 'paused' : ''}`;
@@ -542,30 +655,47 @@ const app = {
             let userHtml = '';
             if (note.assignedUser && this.state.users[note.assignedUser] && note.assignedUser !== this.myId) {
                 const displayName = this.localNicknames[note.assignedUser] || this.state.users[note.assignedUser].name;
-                userHtml = `<div class="user-avatar" style="width:22px;height:22px;font-size:10px;position:absolute;top:10px;right:10px;">${displayName.charAt(0)}</div>`;
+                userHtml = `<div class="user-avatar" style="width:20px;height:20px;font-size:9px;position:absolute;top:10px;right:10px;">${displayName.charAt(0)}</div>`;
             }
 
-            let progressHtml = '', actionHtml = '';
-            if (note.status === 'in-progress' && note.assumedTimeSpan) {
-                progressHtml = `<div class="note-progress-bar" id="prog-${note.id}"></div>`;
-                actionHtml = `<button onclick="app.togglePause('${note.id}', event)" style="padding:2px 6px; font-size:10px;">${note.isPaused ? '▶' : '⏸'}</button>`;
+            let progressHtml = '', actionHtml = '', loaderHtml = '';
+            if (note.status === 'in-progress') {
+                actionHtml = `<button onclick="app.togglePause('${note.id}', event)" style="padding:2px 6px; font-size:10px; border-radius:4px; margin-right:5px;">${note.isPaused ? '▶' : '⏸'}</button>`;
+                
+                if(!note.isPaused) {
+                    const lClass = note.priority === 'urgent' ? 'l-urgent' : (note.priority === 'low' ? 'l-low' : 'l-default');
+                    loaderHtml = `<div class="mini-loader ${lClass}" style="display:block;"></div>`;
+                }
+
+                if(note.assumedTimeSpan) {
+                    const textLen = (note.desc?.length || 0);
+                    const dots = Math.max(2, Math.min(15, Math.floor(textLen / 20) + 3));
+                    const dotSize = 100 / dots;
+                    progressHtml = `
+                        <div class="progress-wrapper" style="--dot-size: ${dotSize}%">
+                            <div class="progress-mask"></div>
+                            <div class="progress-fill" id="prog-${note.id}"></div>
+                        </div>`;
+                }
             }
 
+            // Quick Edit Inline bindings
             el.innerHTML = `
                 ${userHtml}
                 <div class="note-header">
-                    <div class="note-subject" id="subj-${note.id}">${note.subject}</div>
+                    <div class="note-subject" id="subj-${note.id}" onclick="app.startQuickEdit(this, '${note.id}', 'subject', event)">${note.subject}</div>
                 </div>
-                ${note.desc ? `<div class="note-desc" id="desc-${note.id}">${note.desc}</div>` : ''}
+                ${note.desc ? `<div class="note-desc" id="desc-${note.id}" onclick="app.startQuickEdit(this, '${note.id}', 'desc', event)">${note.desc}</div>` : ''}
                 <div class="note-tags">${tagsHtml}</div>
                 <div class="note-meta">
-                    <span>${actionHtml}</span>
+                    <span style="z-index:5;">${actionHtml}</span>
                     ${note.assumedTimeSpan ? `<span style="opacity:0.5">${(note.assumedTimeSpan/3600000).toFixed(1)}h</span>` : ''}
                 </div>
+                ${loaderHtml}
                 ${progressHtml}
             `;
 
-            el.ondblclick = () => this.openNoteModal(note.id);
+            el.ondblclick = (e) => { if(!e.target.isContentEditable) this.openNoteModal(note.id); };
             el.onmouseenter = () => { this.hoveredNoteId = note.id; el.classList.add('hover-focus'); };
             el.onmouseleave = () => { this.hoveredNoteId = null; el.classList.remove('hover-focus'); };
             
@@ -581,64 +711,68 @@ const app = {
 
             col.appendChild(el);
         });
+
+        // Main column loader logic
+        document.getElementById('main-progress-loader').style.display = inProgressCount > 0 ? 'grid' : 'none';
+        
         this.updateProgressUI();
     },
 
-    renderChat: function() {
-        const container = document.getElementById('chat-messages');
-        container.innerHTML = this.state.chat.map(c => {
-            const isMe = c.user === this.myId;
-            const userName = isMe ? 'You' : (this.localNicknames[c.user] || (this.state.users[c.user]?.name) || 'Unknown');
-            const time = new Date(c.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            return `<div class="chat-msg ${isMe?'self':''}"><strong>${userName}</strong><br>${c.msg}<span class="time">${time}</span></div>`;
-        }).join('');
-        container.scrollTop = container.scrollHeight;
-    },
-
-    // --- CONTEXT MENU ACTIONS ---
-    ctxQuickEdit: function() {
-        document.getElementById('context-menu').style.display = 'none';
-        const id = this.ctxNoteId;
-        const note = this.state.notes[id];
-        const subjEl = document.getElementById(`subj-${id}`);
-        const descEl = document.getElementById(`desc-${id}`);
+    // --- QUICK EDIT LOGIC ---
+    startQuickEdit: function(el, noteId, field, e) {
+        if(e) e.stopPropagation();
+        el.contentEditable = true;
+        el.classList.add('editing');
+        el.focus();
         
-        const saveQuick = () => {
-            note.subject = subjEl.innerText;
-            if(descEl) note.desc = descEl.innerText;
+        // Move cursor to absolute end
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+
+        el.onblur = () => {
+            el.contentEditable = false;
+            el.classList.remove('editing');
+            const note = this.state.notes[noteId];
+            if(!note) return;
+            const newVal = el.innerText.trim();
+            
+            if(field === 'subject' && newVal !== note.subject) note.subject = newVal || 'Untitled';
+            if(field === 'desc' && newVal !== note.desc) note.desc = newVal;
+            
             note.timestamps.lastModified = Date.now();
             this.saveState(); this.broadcast({type:'NOTE_UPDATE', note});
-            subjEl.contentEditable = false;
-            if(descEl) { descEl.contentEditable = false; descEl.classList.remove('editing'); }
         };
 
-        subjEl.contentEditable = true;
-        subjEl.focus();
-        subjEl.onblur = saveQuick;
-        
-        if(descEl) {
-            descEl.contentEditable = true;
-            descEl.classList.add('editing');
-            descEl.onblur = saveQuick;
-        }
+        el.onkeydown = (ev) => { if(ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); el.blur(); } };
+    },
+
+    ctxQuickEdit: function() {
+        document.getElementById('context-menu').style.display = 'none';
+        const subjEl = document.getElementById(`subj-${this.ctxNoteId}`);
+        if(subjEl) this.startQuickEdit(subjEl, this.ctxNoteId, 'subject');
     },
     ctxFullEdit: function() { document.getElementById('context-menu').style.display = 'none'; this.openNoteModal(this.ctxNoteId); },
     ctxDelete: function() { document.getElementById('context-menu').style.display = 'none'; this.deleteNote(this.ctxNoteId); },
 
-    // --- INTERACTION LOGIC ---
+
+    // --- INTERACTIONS ---
     setupPanZoom: function() {
         const container = document.getElementById('board-container');
         container.addEventListener('wheel', (e) => {
             if (e.ctrlKey || e.metaKey) {
                 e.preventDefault();
-                const zoom = Math.exp((e.deltaY < 0 ? 1 : -1) * 0.1);
-                this.transform.scale = Math.min(Math.max(0.5, this.transform.scale * zoom), 2);
+                const zoom = Math.exp((e.deltaY < 0 ? 1 : -1) * 0.08);
+                this.transform.scale = Math.min(Math.max(0.5, this.transform.scale * zoom), 1.5);
                 document.getElementById('canvas-wrapper').style.transform = `translate(${this.transform.x}px, ${this.transform.y}px) scale(${this.transform.scale})`;
             }
         }, { passive: false });
 
         container.addEventListener('mousedown', (e) => {
-            if (e.target.closest('.note')) return;
+            if (e.target.closest('.note') || window.innerWidth < 1024) return; // Disable drag pan on mobile
             this.isPanning = true;
             this.startX = e.clientX - this.transform.x;
             this.startY = e.clientY - this.transform.y;
@@ -656,7 +790,7 @@ const app = {
         let draggedId = null;
         document.addEventListener('dragstart', (e) => {
             const el = e.target.closest('.note');
-            if (el) { draggedId = el.dataset.id; el.classList.add('dragging'); }
+            if (el && !e.target.isContentEditable) { draggedId = el.dataset.id; el.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
         });
         document.addEventListener('dragend', (e) => {
             const el = e.target.closest('.note');
@@ -664,7 +798,7 @@ const app = {
         });
 
         document.querySelectorAll('.column-content').forEach(col => {
-            col.addEventListener('dragover', e => e.preventDefault());
+            col.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
             col.addEventListener('drop', e => {
                 e.preventDefault();
                 if (draggedId) this.moveNoteNetwork(this.state.notes[draggedId], col.dataset.status);
@@ -676,24 +810,28 @@ const app = {
         const oldStatus = note.status;
         if (newStatus === oldStatus) return;
 
-        if (oldStatus === 'in-progress') {
-            if (!note.isPaused && note.assumedTimeSpan) note.accumulatedProgressTime += (Date.now() - note.timestamps.inProgress);
-            note.isPaused = false;
+        const updateState = () => {
+            if (oldStatus === 'in-progress') {
+                if (!note.isPaused && note.assumedTimeSpan) note.accumulatedProgressTime += (Date.now() - note.timestamps.inProgress);
+                note.isPaused = false;
+            }
+            if (newStatus === 'in-progress') { note.assignedUser = this.myId; note.timestamps.inProgress = Date.now(); note.isPaused = false; }
+            if (newStatus === 'done') note.timestamps.completed = Date.now();
+
+            note.status = newStatus;
+            note.timestamps.lastModified = Date.now();
+            this.saveState(); this.renderNotes();
+            this.broadcast({ type: 'NOTE_UPDATE', note });
+        };
+
+        if ((oldStatus === 'done' && newStatus !== 'done') || (oldStatus === 'review' && newStatus === 'in-progress') || (oldStatus === 'in-progress' && newStatus === 'todo')) {
+            this.confirm(`Revert task from ${oldStatus.toUpperCase()} to ${newStatus.toUpperCase()}?`, () => {
+                note.timestamps.reverted = Date.now();
+                updateState();
+            });
+        } else {
+            updateState();
         }
-
-        if (newStatus === 'in-progress') {
-            note.assignedUser = this.myId;
-            note.timestamps.inProgress = Date.now();
-            note.isPaused = false;
-        }
-
-        if (newStatus === 'done') note.timestamps.completed = Date.now();
-
-        note.status = newStatus;
-        note.timestamps.lastModified = Date.now();
-        
-        this.saveState(); this.renderNotes();
-        this.broadcast({ type: 'NOTE_UPDATE', note });
     },
 
     updateProgressUI: function() {
@@ -703,7 +841,7 @@ const app = {
                 if (!note.isPaused && note.timestamps.inProgress) elapsed += (Date.now() - note.timestamps.inProgress);
                 const percent = Math.min((elapsed / note.assumedTimeSpan) * 100, 100);
                 const bar = document.getElementById(`prog-${note.id}`);
-                if (bar) bar.style.width = `${percent}%`;
+                if (bar) bar.style.setProperty('--p', `${percent}%`);
             }
         });
     },
@@ -731,7 +869,7 @@ const app = {
         const hasTime = isEditing && this.state.notes[noteId].assumedTimeSpan > 0;
         document.getElementById('enable-time').checked = hasTime;
         document.getElementById('note-time').disabled = !hasTime;
-        document.getElementById('note-time').value = hasTime ? (this.state.notes[noteId].assumedTimeSpan / 3600000) : '1';
+        document.getElementById('note-time').value = hasTime ? (this.state.notes[noteId].assumedTimeSpan / 3600000) : '';
         
         const tags = isEditing ? this.state.notes[noteId].tags : [];
         Array.from(document.getElementById('note-tags').options).forEach(opt => opt.selected = tags.includes(opt.value));
@@ -739,15 +877,23 @@ const app = {
         this.selectColor(null, isEditing ? (this.state.notes[noteId].color||'') : '');
 
         modal.style.display = 'flex';
+        void modal.offsetWidth; // Trigger reflow
+        modal.classList.add('active');
         document.getElementById('note-subject').focus();
     },
     
-    closeModal: function() { document.getElementById('modal-overlay').style.display = 'none'; },
+    closeModal: function() { 
+        const m = document.getElementById('modal-overlay');
+        m.classList.remove('active');
+        setTimeout(()=>m.style.display = 'none', 200);
+    },
 
     selectColor: function(element, color) {
         this.selectedColor = color;
         document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
         if(element) element.classList.add('selected');
+        else if(color) document.getElementById('note-color-picker').parentElement.classList.add('selected');
+        else document.querySelector('.swatch').classList.add('selected'); // default
     },
 
     saveNote: function() {
@@ -756,18 +902,17 @@ const app = {
         const id = isNew ? 'note_' + Date.now() : idInput;
         
         const subj = document.getElementById('note-subject').value.trim();
-        if(!subj) return alert("Subject required");
+        if(!subj) return this.toast("Subject is required");
 
         const tags = Array.from(document.getElementById('note-tags').selectedOptions).map(o => o.value);
         const useTime = document.getElementById('enable-time').checked;
         const hours = parseFloat(document.getElementById('note-time').value) || 0;
 
         const note = {
-            id, subject: subj,
-            desc: document.getElementById('note-desc').value,
+            id, subject: subj, desc: document.getElementById('note-desc').value,
             priority: document.getElementById('note-priority').value,
             tags, color: this.selectedColor,
-            assumedTimeSpan: useTime ? hours * 3600000 : null,
+            assumedTimeSpan: (useTime && hours>0) ? hours * 3600000 : null,
             status: isNew ? 'todo' : this.state.notes[id].status,
             assignedUser: isNew ? null : this.state.notes[id].assignedUser,
             accumulatedProgressTime: isNew ? 0 : this.state.notes[id].accumulatedProgressTime,
@@ -783,11 +928,11 @@ const app = {
     },
 
     deleteNote: function(id) {
-        if(confirm("Delete permanently?")) {
+        this.confirm("Delete this note permanently?", () => {
             delete this.state.notes[id];
             this.saveState(); this.renderNotes();
             this.broadcast({ type: 'NOTE_DELETED', noteId: id });
-        }
+        });
     },
 
     // --- UTILS ---
@@ -822,14 +967,41 @@ const app = {
         input.value = '';
     },
     renameSelf: function() {
-        const newName = prompt("Enter your display name:", this.state.users[this.myId]?.name);
-        if (newName && newName.trim()) {
-            this.state.users[this.myId].name = newName.trim();
-            this.localNicknames[this.myId] = newName.trim();
-            localStorage.setItem('kanban_nicks', JSON.stringify(this.localNicknames));
-            this.saveState(); this.renderUsers(); this.renderChat();
-            this.broadcast({ type: 'USER_UPDATE', user: this.state.users[this.myId] });
-        }
+        this.promptUser("Profile", "Enter your display name:", this.state.users[this.myId]?.name, val => {
+            if (val && val.trim()) {
+                this.state.users[this.myId].name = val.trim();
+                this.localNicknames[this.myId] = val.trim();
+                localStorage.setItem('kanban_nicks', JSON.stringify(this.localNicknames));
+                this.saveState(); this.renderUsers(); this.renderChat();
+                this.broadcast({ type: 'USER_UPDATE', user: this.state.users[this.myId] });
+            }
+        });
+    },
+    toggleLogger: function() {
+        const lw = document.getElementById('logger-window');
+        lw.style.display = lw.style.display === 'flex' ? 'none' : 'flex';
+    },
+    copyLogs: function() {
+        navigator.clipboard.writeText(document.getElementById('logger-content').innerText);
+        this.toast("Logs Copied!");
+    },
+    exportState: function() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state));
+        const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", `trodo_backup_${Date.now()}.json`); dl.click();
+        this.toast("Exported successfully.");
+    },
+    importState: function(event) {
+        const file = event.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                this.state = JSON.parse(e.target.result);
+                if (!this.state.settings) this.state.settings = { reviewEnabled: false };
+                this.saveState(); this.loadState(); this.renderAll(); this.broadcast({ type: 'FULL_STATE', state: this.state });
+                this.toast("Imported successfully.");
+            } catch (err) { this.toast("Invalid JSON"); }
+        };
+        reader.readAsText(file);
     }
 };
 
@@ -837,5 +1009,3 @@ window.onload = () => app.init();
 </script>
 </body>
 </html>
-
-```
