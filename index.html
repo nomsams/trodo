@@ -43,11 +43,18 @@
         input, select, textarea { background: var(--col-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 13px; outline: none; transition: border-color 0.2s; }
         input:focus, select:focus, textarea:focus { border-color: var(--accent-color); }
         
-        /* Ultra-Slim Unified Scrollbars */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+        /* Unified Scrollbars */
+        .column-content::-webkit-scrollbar, #chat-messages::-webkit-scrollbar { 
+            width: 4px; 
+            height: 4px; 
+        }
+        .column-content::-webkit-scrollbar-thumb, #chat-messages::-webkit-scrollbar-thumb { 
+            background: var(--border-color); 
+            border-radius: 4px; 
+        }
+        .column-content::-webkit-scrollbar-thumb:hover, #chat-messages::-webkit-scrollbar-thumb:hover { 
+            background: var(--accent-color); 
+        }
         
         /* Top Bar Layout */
         #top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: transparent; z-index: 100; position: absolute; top:0; left:0; right:0; padding-top: max(15px, env(safe-area-inset-top)); pointer-events: none; }
@@ -75,7 +82,7 @@
         .column { background: var(--col-bg); border-radius: 18px; display: flex; flex-direction: column; padding: 18px; gap: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); transition: flex-basis 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); width: 320px; flex-shrink: 0; }
         .column-header { font-weight: 800; font-size: 13px; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; color: var(--text-color); position: relative; min-height: 24px; opacity: 0.9; text-transform: uppercase;}
         
-        .column-content { flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; min-height: 200px; padding: 4px; padding-bottom: 30px; margin: -4px; }
+        .column-content { flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; min-height: 200px; padding: 4px; padding-bottom: 30px; margin: -4px; position: relative; }
         
         /* Layout Grid Ratios */
         @media (min-width: 1024px) {
@@ -88,40 +95,55 @@
             body.review-enabled #col-review { display: flex; }
         }
 
-        /* Clean Minimal Bouncing Dots Loader */
-        .col-loader {
-            width: 36px;
-            height: 8px;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            bottom: -12px;
-            display: none;
-            background: radial-gradient(circle closest-side, var(--accent-color) 90%, transparent) 0% 50%,
-                        radial-gradient(circle closest-side, var(--accent-color) 90%, transparent) 50% 50%,
-                        radial-gradient(circle closest-side, var(--accent-color) 90%, transparent) 100% 50%;
-            background-size: 8px 8px;
-            background-repeat: no-repeat;
-            animation: dots-bounce 0.8s infinite linear alternate;
-            opacity: 0.8;
+        /* 1. The Factory Conveyor Animation (The "Packages") */
+        .col-loader { width: 120px; height: 16px; position: relative; margin: 15px auto; display: none; z-index: 1; }
+        .col-loader::before { 
+            content: ""; position: absolute; width: 16px; height: 16px; top: 0;
+            background: var(--accent-color); z-index: 5;
+            animation: shape-morph 8s infinite ease-in-out;
         }
-        @keyframes dots-bounce {
-            0% { background-position: 0% 0%, 50% 50%, 100% 50%; }
-            20% { background-position: 0% 50%, 50% 0%, 100% 50%; }
-            40% { background-position: 0% 50%, 50% 50%, 100% 0%; }
-            60% { background-position: 0% 100%, 50% 50%, 100% 50%; }
-            80% { background-position: 0% 50%, 50% 100%, 100% 50%; }
-            100% { background-position: 0% 50%, 50% 50%, 100% 100%; }
+        .col-loader::after { 
+            content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 4px;
+            transform: translateY(-50%);
+            background: repeating-linear-gradient(90deg, var(--border-color) 0px, var(--border-color) 6px, transparent 6px, transparent 12px);
+            background-size: 24px 100%;
+            animation: conveyor-slide 4s infinite linear;
+            z-index: -1;
+            border-radius: 2px;
+        }
+        @keyframes conveyor-slide {
+            0% { background-position: 0 0; }
+            100% { background-position: 24px 0; }
+        }
+
+        /* Morphing between 4 distinct shapes slowly */
+        @keyframes shape-morph {
+            0% { clip-path: circle(50%); left: 0; }
+            25% { clip-path: polygon(50% 0%, 0% 100%, 100% 100%); left: 33%; }
+            50% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); left: 66%; }
+            75% { clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); left: calc(100% - 16px); }
+            100% { clip-path: circle(50%); left: 0; }
         }
 
         /* Sticky Notes */
         .note { background: var(--note-bg); border-radius: 12px; padding: 14px; box-shadow: var(--shadow); cursor: pointer; border: 1px solid var(--border-color); position: relative; transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s, outline 0.1s; display: flex; flex-direction: column; gap: 8px; z-index: 1; transform-origin: center; }
         
         .note:hover, .note.hover-focus { transform: scale(1.02); box-shadow: 0 16px 32px rgba(0,0,0,0.15); z-index: 50; }
-        .note.dragging { opacity: 0.6; transform: scale(0.95) rotate(var(--rot, 0deg)); z-index: 100; box-shadow: 0 24px 48px rgba(0,0,0,0.3); pointer-events: none; }
+        .note.dragging { opacity: 0.4; transform: scale(0.95) rotate(var(--rot, 0deg)); z-index: 100; box-shadow: 0 24px 48px rgba(0,0,0,0.3); pointer-events: none; }
         
-        .note-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .note-subject { font-weight: 700; font-size: 14px; word-break: break-word; outline: none; border-radius: 4px; transition: background 0.2s; padding: 2px 4px; margin: -2px -4px; }
+        /* Drop Target Spacer */
+        .drop-spacer { 
+            height: 80px; 
+            border: 2px dashed var(--accent-color); 
+            border-radius: 12px; 
+            margin: 4px 0; 
+            transition: all 0.15s ease; 
+            background: rgba(10, 132, 255, 0.05); 
+            pointer-events: none; 
+        }
+        
+        .note-header { display: flex; justify-content: space-between; align-items: flex-start; padding-left: 18px; }
+        .note-subject { font-weight: 700; font-size: 14px; word-break: break-word; outline: none; border-radius: 4px; transition: background 0.2s; padding: 2px 4px; margin: -2px -4px; width: 100%; }
         .note-desc { font-size: 12px; opacity: 0.8; word-break: break-word; outline: none; border-radius: 4px; transition: background 0.2s; padding: 2px 4px; margin: -2px -4px; }
         
         .note-desc.empty-desc { opacity: 0.4; font-style: italic; min-height: 20px; }
@@ -142,13 +164,13 @@
         .progress-mask { position: absolute; inset: 0; -webkit-mask: radial-gradient(circle closest-side, #000 90%, #0000) 0 0/var(--dot-size, 20%) 100%, linear-gradient(#000 0 0) center/calc(100% - 6px) 100% no-repeat; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); background-size: 200% 100%; animation: p-shimmer 2s infinite linear; pointer-events: none; }
         @keyframes p-shimmer { 0% {background-position: 200% 0;} 100% {background-position: -200% 0;} }
 
-        /* Quick Move Hover Button - Completely off the note */
+        /* Quick Move Hover Button - Top Left, layered above background */
         .quick-move-btn { 
             position: absolute; 
-            right: -14px; 
-            top: -14px; 
-            width: 32px; 
-            height: 32px; 
+            left: 8px; 
+            top: 8px; 
+            width: 24px; 
+            height: 24px; 
             border-radius: 50%; 
             background: var(--accent-color); 
             color: white; 
@@ -156,39 +178,56 @@
             justify-content: center; 
             align-items: center; 
             font-weight: bold; 
-            font-size: 16px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3); 
-            z-index: 100; 
-            border: 3px solid var(--bg-color); 
+            font-size: 12px; 
+            box-shadow: none;
+            z-index: 60; 
+            border: 2px solid var(--note-bg); 
             transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1); 
         }
         .quick-move-btn:hover { transform: scale(1.15); filter: brightness(1.1); }
         .note:hover .quick-move-btn { display: flex; }
 
-        /* Status Animations (Clean Spinners) */
-        .mini-loader {
-            width: 14px;
-            height: 14px;
-            border: 2px solid currentColor;
-            border-bottom-color: transparent;
-            border-radius: 50%;
-            display: none;
-            animation: spin 1s linear infinite;
-            flex-shrink: 0;
-            margin-left: auto;
+        /* 2. Priority Spinners (Bottom-Right) */
+        .priority-spinner { 
+            position: absolute; bottom: 8px; right: 8px; width: 14px; height: 14px; 
+            border-radius: 50%; border: 2px solid transparent; 
         }
+        .spinner-urgent { border-top-color: var(--urgent-color); animation: spin 0.5s linear infinite; border-width: 3px; }
+        .spinner-default { border-top-color: var(--accent-color); animation: spin 1s linear infinite; }
+        .spinner-low { border-top-color: var(--text-color); animation: spin 2s linear infinite; opacity: 0.6; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .l-urgent { color: var(--urgent-color); }
-        .l-default { color: var(--accent-color); }
-        .l-low { color: var(--text-color); opacity: 0.5; }
 
         /* Floating Chat */
         #chat-fab { position: fixed; bottom: max(25px, env(safe-area-inset-bottom)); right: 25px; width: 56px; height: 56px; border-radius: 50%; background: var(--accent-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 10px 24px rgba(10, 132, 255, 0.4); cursor: pointer; z-index: 200; transition: transform 0.2s; border: none; }
         #chat-fab:hover { transform: scale(1.1); }
         #chat-badge { position: absolute; top: 0; right: 0; width: 16px; height: 16px; background: var(--urgent-color); border-radius: 50%; display: none; border: 2px solid var(--bg-color); }
         
-        #chat-panel { position: fixed; right: 25px; bottom: calc(max(25px, env(safe-area-inset-bottom)) + 70px); width: 320px; height: 420px; background: var(--note-bg); border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); display: flex; flex-direction: column; z-index: 190; transform: scale(0.9); opacity: 0; pointer-events: none; transition: var(--transition); transform-origin: bottom right; }
-        #chat-panel.open { transform: scale(1); opacity: 1; pointer-events: auto; }
+        #chat-panel { 
+            position: fixed; 
+            right: 25px; 
+            bottom: calc(max(25px, env(safe-area-inset-bottom)) + 70px); 
+            width: 320px; 
+            height: 420px; 
+            background: var(--note-bg); 
+            border-radius: 16px; 
+            border: 1px solid var(--border-color); 
+            box-shadow: var(--shadow); 
+            backdrop-filter: var(--glass-blur); 
+            -webkit-backdrop-filter: var(--glass-blur); 
+            display: flex; 
+            flex-direction: column; 
+            z-index: 190; 
+            transform: scale(0.9); 
+            opacity: 0; 
+            pointer-events: none; 
+            transition: var(--transition); 
+            transform-origin: bottom right; 
+        }
+        #chat-panel.open { 
+            transform: scale(1); 
+            opacity: 1; 
+            pointer-events: auto !important; 
+        }
         #chat-messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
         .chat-msg { background: var(--col-bg); padding: 10px 14px; border-radius: 14px; border: 1px solid var(--border-color); width: fit-content; max-width: 85%; }
         .chat-msg.self { align-self: flex-end; background: var(--accent-color); color: white; border: none; }
@@ -449,11 +488,13 @@ const app = {
         this.renderAll();
         setInterval(() => this.updateProgressUI(), 1000);
 
-        // Fix Context Menu closing on outside click
-        document.addEventListener('mousedown', (e) => {
+        // Context Menu Cleanup: Explicitly close context menu if click target is not .note or menu itself
+        window.addEventListener('mousedown', (e) => {
             const menu = document.getElementById('context-menu');
-            if(menu.style.display === 'flex' && !e.target.closest('#context-menu')) {
-                menu.style.display = 'none';
+            if (menu && menu.style.display === 'flex') {
+                if (!e.target.closest('.note') && !e.target.closest('#context-menu')) {
+                    menu.style.display = 'none';
+                }
             }
         });
 
@@ -464,13 +505,27 @@ const app = {
     setupChatEvents: function() {
         const input = document.getElementById('chat-input');
         const btn = document.getElementById('chat-send-btn');
+        const panel = document.getElementById('chat-panel');
+
+        // Prevent board pan-zoom from capturing clicks/drags inside the chat panel
+        panel.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+        });
+
         input.addEventListener('keydown', (e) => {
+            e.stopPropagation();
             if(e.key === 'Enter') {
-                e.preventDefault(); e.stopPropagation();
+                e.preventDefault();
                 this.sendChat();
             }
         });
-        btn.addEventListener('click', () => this.sendChat());
+        input.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+        });
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.sendChat();
+        });
     },
 
     // --- DOM MODAL & UI UTILS ---
@@ -732,11 +787,17 @@ const app = {
         let inProgressCount = 0;
         const notesArr = Object.values(this.state.notes);
         
+        // Gravity-Based Sorting: Forces all isPaused: true items to the bottom of the list before priority is calculated
         notesArr.sort((a, b) => {
-            if (a.isPaused && !b.isPaused) return 1;
-            if (!a.isPaused && b.isPaused) return -1;
-            if (a.priority === 'urgent' && b.priority !== 'urgent') return -1;
-            if (a.priority !== 'urgent' && b.priority === 'urgent') return 1;
+            const aPaused = a.isPaused ? 1 : 0;
+            const bPaused = b.isPaused ? 1 : 0;
+            if (aPaused !== bPaused) return aPaused - bPaused;
+
+            const priorityWeight = { urgent: 3, default: 2, low: 1 };
+            const aWeight = priorityWeight[a.priority] || 2;
+            const bWeight = priorityWeight[b.priority] || 2;
+            if (bWeight !== aWeight) return bWeight - aWeight;
+
             if ((b.orderIndex||0) !== (a.orderIndex||0)) return (b.orderIndex||0) - (a.orderIndex||0);
             return a.timestamps.created - b.timestamps.created;
         });
@@ -761,13 +822,13 @@ const app = {
                 userHtml = `<div class="user-avatar" style="width:20px;height:20px;font-size:9px;position:absolute;top:10px;right:10px; border:none;">${displayName.charAt(0)}</div>`;
             }
 
-            let progressHtml = '', actionHtml = '', loaderHtml = '';
+            let progressHtml = '', actionHtml = '', spinnerHtml = '';
             if (note.status === 'in-progress') {
                 actionHtml = `<button onclick="app.togglePause('${note.id}', event)" style="padding:4px 8px; font-size:10px; border-radius:4px; margin-right:6px; box-shadow:none;">${note.isPaused ? '▶ Play' : '⏸ Pause'}</button>`;
                 
                 if(!note.isPaused) {
-                    const lClass = note.priority === 'urgent' ? 'l-urgent' : (note.priority === 'low' ? 'l-low' : 'l-default');
-                    loaderHtml = `<div class="mini-loader ${lClass}" style="display:block;"></div>`;
+                    const sClass = note.priority === 'urgent' ? 'spinner-urgent' : (note.priority === 'low' ? 'spinner-low' : 'spinner-default');
+                    spinnerHtml = `<div class="priority-spinner ${sClass}"></div>`;
                 }
 
                 if(note.assumedTimeSpan) {
@@ -807,7 +868,7 @@ const app = {
                         ${actionHtml}
                         ${note.assumedTimeSpan ? `<span style="opacity:0.7; font-weight:700;">${(note.assumedTimeSpan/3600000).toFixed(1)}h</span>` : ''}
                     </div>
-                    ${loaderHtml}
+                    ${spinnerHtml}
                 </div>
                 ${progressHtml}
             `;
@@ -919,14 +980,18 @@ const app = {
             const el = e.target.closest('.note');
             if (el && !e.target.isContentEditable) { 
                 draggedId = el.dataset.id; 
+                // Apply random rotate variable via CSS custom properties before drag starts
+                const randomRot = (Math.random() - 0.5) * 6;
+                el.style.setProperty('--rot', `${randomRot}deg`); 
                 el.classList.add('dragging');
-                el.style.setProperty('--rot', `${(Math.random() - 0.5) * 6}deg`); 
                 e.dataTransfer.effectAllowed = 'move'; 
             }
         });
         document.addEventListener('dragend', (e) => {
             const el = e.target.closest('.note');
-            if (el) el.classList.remove('dragging'); draggedId = null;
+            if (el) el.classList.remove('dragging'); 
+            draggedId = null;
+            document.querySelectorAll('.drop-spacer').forEach(s => s.remove());
         });
 
         document.querySelectorAll('.column-content').forEach(col => {
@@ -937,29 +1002,47 @@ const app = {
                 const draggingEl = document.querySelector('.dragging');
                 if(!draggingEl) return;
                 
+                // Get or create drop spacer
+                let spacer = col.querySelector('.drop-spacer');
+                if (!spacer) {
+                    document.querySelectorAll('.drop-spacer').forEach(s => s.remove());
+                    spacer = document.createElement('div');
+                    spacer.className = 'drop-spacer';
+                }
+                
                 const afterElement = this.getDragAfterElement(col, e.clientY);
-                if (afterElement == null) col.appendChild(draggingEl);
-                else col.insertBefore(draggingEl, afterElement);
+                if (afterElement == null) col.appendChild(spacer);
+                else col.insertBefore(spacer, afterElement);
             });
             
             col.addEventListener('drop', e => {
                 e.preventDefault();
+                document.querySelectorAll('.drop-spacer').forEach(s => s.remove());
                 if (!draggedId) return;
                 
                 const note = this.state.notes[draggedId];
                 const newStatus = col.dataset.status;
                 
-                const notesInCol = Array.from(col.querySelectorAll('.note'));
-                notesInCol.forEach((noteEl, index) => {
-                    const n = this.state.notes[noteEl.dataset.id];
-                    if(n) n.orderIndex = notesInCol.length - index; 
-                });
+                const children = Array.from(col.children).filter(c => c.classList.contains('note') || c.classList.contains('drop-spacer'));
+                const spacerIndex = children.findIndex(c => c.classList.contains('drop-spacer') || c.id === `note-${draggedId}`);
                 
                 if(newStatus !== note.status) this.moveNoteNetwork(note, newStatus, false);
-                else {
-                    note.timestamps.lastModified = Date.now();
-                    this.saveState(); this.broadcast({ type: 'NOTE_UPDATE', note });
+                
+                const notesInCol = Array.from(col.querySelectorAll('.note')).filter(n => n.dataset.id !== draggedId);
+                if (spacerIndex !== -1) {
+                    notesInCol.splice(spacerIndex, 0, document.getElementById(`note-${draggedId}`));
                 }
+                
+                notesInCol.forEach((noteEl, index) => {
+                    if (noteEl) {
+                        const n = this.state.notes[noteEl.dataset.id];
+                        if (n) n.orderIndex = notesInCol.length - index;
+                    }
+                });
+                
+                note.timestamps.lastModified = Date.now();
+                this.saveState(); this.renderNotes();
+                this.broadcast({ type: 'NOTE_UPDATE', note });
             });
         });
     },
