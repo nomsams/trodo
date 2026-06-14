@@ -97,34 +97,35 @@
         }
 
         /* Archive Button */
-        .archive-btn { display: none; padding: 4px 8px; font-size: 10px; background: transparent; border: 1px solid var(--border-color); border-radius: 6px; }
-        #col-done:hover .archive-btn { display: block; animation: fadeIn 0.2s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .archive-btn { display: none; font-size: 10px; padding: 4px 8px; background: transparent; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); cursor: pointer; }
+        .archive-btn:hover { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+        #col-done:hover .archive-btn { display: block; }
 
-        /* Perfectly Synced Factory Conveyor Animation (Half Speed) */
-        .col-loader { width: 90px; height: 16px; position: absolute; left: 50%; transform: translateX(-50%); display: none; opacity: 1; overflow: hidden; border-bottom: 2px solid var(--border-color); }
+        /* Perfectly Synced Factory Conveyor Animation (Half Speed, Z-Index fixed) */
+        .col-loader { width: 90px; height: 16px; position: absolute; left: 50%; transform: translateX(-50%); display: none; opacity: 0.95; overflow: hidden; border-bottom: 2px solid var(--border-color); }
         .col-loader:after { 
             content: ""; position: absolute; inset:0; 
             background: repeating-linear-gradient(90deg, transparent 0 4px, var(--border-color) 4px 26px, transparent 26px 30px); 
             background-size: 30px 100%; 
             animation: conveyor 4s infinite linear; 
-            z-index: 1;
+            z-index: 3; /* Box is in front */
         }
         .col-loader:before { 
             content: ""; position: absolute; width: 12px; height: 12px; left: calc(50% - 6px); bottom: 2px; 
             background: var(--accent-color);
             animation: drop 4s infinite linear, shape-shift 20s infinite steps(1), color-shift 20s infinite steps(1); 
-            z-index: 2;
+            z-index: 2; /* Shape falls behind the front lip of the box */
         }
         @keyframes conveyor {
             0%, 20% { background-position: -30px 0; }
-            40%, 80% { background-position: 0 0; } /* Box stops perfectly in the middle */
-            100% { background-position: 30px 0; }
+            30%, 70% { background-position: 0 0; } /* Box stops perfectly in the middle */
+            80%, 100% { background-position: 30px 0; }
         }
         @keyframes drop {
-            0%, 25% { transform: translateY(-40px); opacity: 0; } /* Falls from higher */
-            35%, 80% { transform: translateY(0); opacity: 1; } /* Shape drops into the stopped box */
-            85%, 100% { transform: translateY(0); opacity: 0; }
+            0%, 20% { transform: translateY(-40px); opacity: 0; }
+            30% { transform: translateY(-40px); opacity: 1; }
+            40%, 70% { transform: translateY(0); opacity: 1; } /* Shape drops into the stopped box */
+            75%, 100% { transform: translateY(0); opacity: 0; }
         }
         @keyframes shape-shift { 
             0%, 20% { border-radius: 50%; clip-path: none; } /* Circle */
@@ -182,63 +183,35 @@
 
         /* Quick Move Hover Button - Perfect Circle, Overlays Spinner, No Border */
         .quick-move-btn { 
-            position: absolute; 
-            right: 10px; 
-            bottom: 10px; 
-            width: 24px; 
-            height: 24px; 
-            min-width: 24px;
-            min-height: 24px;
-            padding: 0;
-            border-radius: 50%; 
-            background: var(--accent-color); 
-            color: white; 
-            display: none; 
-            justify-content: center; 
-            align-items: center; 
-            font-weight: bold; 
-            font-size: 14px; 
-            line-height: 1;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
-            z-index: 60; 
-            border: none; 
-            transition: transform 0.1s; 
-            flex-shrink: 0;
+            position: absolute; right: 10px; bottom: 10px; width: 24px; height: 24px; min-width: 24px; min-height: 24px;
+            padding: 0; border-radius: 50%; background: var(--accent-color); color: white; display: none; 
+            justify-content: center; align-items: center; font-weight: bold; font-size: 14px; line-height: 1;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 60; border: none; transition: transform 0.1s; flex-shrink: 0;
         }
         .quick-move-btn:hover { transform: scale(1.15); }
         .note:hover .quick-move-btn { display: flex; }
 
         /* Status Animations (Mini Loaders) */
         .mini-loader { position: relative; width: 14px; aspect-ratio: 1; display: none; flex-shrink: 0; margin-left: auto; }
-        
         .l-urgent { --_g: no-repeat radial-gradient(farthest-side, currentColor 94%, #0000); background: var(--_g) 0 0, var(--_g) 100% 0, var(--_g) 100% 100%, var(--_g) 0 100%; background-size: 40% 40%; animation: l38 0.5s infinite; color: var(--urgent-color); }
         @keyframes l38 { 100% {background-position: 100% 0, 100% 100%, 0 100%, 0 0} }
-
         .l-default { width: 16px; aspect-ratio: 1.154; --_g: no-repeat radial-gradient(farthest-side, currentColor 90%, #0000); background: var(--_g) 50% 0, var(--_g) 0 100%, var(--_g) 100% 100%; background-size: 35% calc(35%*1.154); animation: l16 1s infinite; color: var(--accent-color); }
         @keyframes l16 { 50%,100% {background-position: 100% 100%, 50% 0, 0 100%} }
-        
         .l-low { width: 16px; aspect-ratio: 1.154; --_g: no-repeat radial-gradient(farthest-side, currentColor 90%, #0000); background: var(--_g) 50% 0, var(--_g) 0 100%, var(--_g) 100% 100%; background-size: 35% calc(35%*1.154); animation: l16 2s infinite; color: var(--text-color); opacity: 0.6; }
 
-        /* History Hover Tooltip */
-        .history-hover-container { position: relative; cursor: help; font-size: 10px; opacity: 0.6; transition: opacity 0.2s; display: flex; align-items: center; margin: 0 auto; }
-        .history-hover-container:hover { opacity: 1; }
-        .history-tooltip { visibility: hidden; position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: var(--text-color); color: var(--bg-color); padding: 10px; border-radius: 8px; font-size: 11px; white-space: nowrap; opacity: 0; transition: opacity 0.2s; z-index: 100; pointer-events: none; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 4px; }
-        .history-hover-container:hover .history-tooltip { visibility: visible; opacity: 1; }
+        /* History Tooltip on Hover */
+        .history-hover-area { position: relative; cursor: help; font-size: 10px; opacity: 0.6; font-weight: 600; margin: 0 8px; }
+        .history-hover-area:hover { opacity: 1; }
+        .history-tooltip { display: none; position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: var(--text-color); color: var(--bg-color); padding: 10px; border-radius: 8px; width: max-content; max-width: 220px; z-index: 200; box-shadow: var(--shadow); pointer-events: none; font-weight: normal; text-align: left; line-height: 1.4; }
+        .history-hover-area:hover .history-tooltip { display: flex; flex-direction: column; gap: 6px; }
 
-        /* Confetti Animation */
-        .confetti { position: fixed; width: 8px; height: 8px; border-radius: 2px; pointer-events: none; z-index: 9999; animation: confetti-pop 1s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
-        @keyframes confetti-pop {
-            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
-            100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(720deg); opacity: 0; }
-        }
-
-        /* Floating Chat & Help */
+        /* Floating Chat & Guide */
         #chat-fab { position: fixed; bottom: max(25px, env(safe-area-inset-bottom)); right: 25px; width: 56px; height: 56px; border-radius: 50%; background: var(--accent-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 10px 24px rgba(10, 132, 255, 0.4); cursor: pointer; z-index: 200; transition: transform 0.2s; border: none; }
         #chat-fab:hover { transform: scale(1.1); }
         #chat-badge { position: absolute; top: 0; right: 0; width: 16px; height: 16px; background: var(--urgent-color); border-radius: 50%; display: none; border: 2px solid var(--bg-color); }
         
-        #help-fab { position: fixed; bottom: max(25px, env(safe-area-inset-bottom)); left: 25px; width: 40px; height: 40px; border-radius: 50%; background: var(--col-bg); color: var(--text-color); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; box-shadow: var(--shadow); cursor: pointer; z-index: 200; border: 1px solid var(--border-color); backdrop-filter: var(--glass-blur); transition: transform 0.2s; }
-        #help-fab:hover { transform: scale(1.1); }
+        #guide-fab { position: fixed; bottom: max(25px, env(safe-area-inset-bottom)); left: 25px; width: 40px; height: 40px; border-radius: 50%; background: var(--col-bg); border: 1px solid var(--border-color); color: var(--text-color); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; cursor: pointer; z-index: 200; box-shadow: var(--shadow); transition: transform 0.2s; }
+        #guide-fab:hover { transform: scale(1.1); }
 
         #chat-panel { position: fixed; right: 25px; bottom: calc(max(25px, env(safe-area-inset-bottom)) + 70px); width: 320px; height: 420px; background: var(--note-bg); border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); display: flex; flex-direction: column; z-index: 190; transform: scale(0.9); opacity: 0; pointer-events: none; transition: var(--transition); transform-origin: bottom right; }
         #chat-panel.open { transform: scale(1); opacity: 1; pointer-events: auto; }
@@ -263,7 +236,6 @@
         .form-group { display: flex; flex-direction: column; gap: 6px; }
         .form-group.full { grid-column: 1 / -1; }
         .form-group label { font-size: 11px; font-weight: 700; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
-        
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; grid-column: 1 / -1; border-top: 1px solid var(--border-color); padding-top: 16px;}
 
         /* Custom Toast */
@@ -283,6 +255,10 @@
         #context-menu button { background: transparent; border: none; text-align: left; padding: 10px 12px; border-radius: 6px; box-shadow: none; font-size: 13px; margin: 1px 0; font-weight: 500;}
         #context-menu button:hover { background: var(--accent-color); color: white; }
         #context-menu button.danger:hover { background: var(--urgent-color); }
+
+        /* Confetti Animation */
+        .confetti { position: fixed; width: 8px; height: 8px; pointer-events: none; z-index: 9999; border-radius: 2px; }
+        @keyframes confetti-pop { 0% { transform: translate(0,0) rotate(0deg) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) rotate(720deg) scale(0); opacity: 0; } }
     </style>
 </head>
 <body>
@@ -357,14 +333,14 @@
             <div class="column" id="col-done">
                 <div class="column-header">
                     <span>DONE</span>
-                    <button class="archive-btn" onclick="app.archiveDoneTasks()">Archive</button>
+                    <button class="archive-btn" onclick="app.archiveDone()">Archive Done</button>
                 </div>
                 <div class="column-content" data-status="done"></div>
             </div>
         </div>
     </div>
 
-    <button id="help-fab" onclick="app.toggleHelp()">?</button>
+    <button id="guide-fab" onclick="app.openGuide()">?</button>
     <button id="chat-fab" onclick="app.toggleChat()">💬<div id="chat-badge"></div></button>
 
     <div id="chat-panel">
@@ -404,23 +380,22 @@
         </div>
     </div>
 
-    <div id="help-overlay" class="overlay" onmousedown="if(event.target===this) app.toggleHelp()">
+    <!-- Guide Modal -->
+    <div id="guide-modal" class="overlay" onmousedown="if(event.target===this) this.classList.remove('active'); setTimeout(()=>this.style.display='none',200);">
         <div class="modal" style="width: 400px;">
-            <h3 style="margin-bottom: 5px;">Trodo Guide & Shortcuts</h3>
-            <div style="font-size: 13px; opacity: 0.9; line-height: 1.5; display: flex; flex-direction: column; gap: 10px;">
-                <p><b>Drag & Drop:</b> Grab any card to move it between columns or reorder it within the same column.</p>
-                <p><b>Quick Edit:</b> Click directly on a card's title or description to edit it inline. Press Enter to save.</p>
-                <p><b>Context Menu:</b> Right-click any card for advanced options like Duplicate or Delete.</p>
-                <hr style="border: none; border-top: 1px solid var(--border-color); margin: 5px 0;">
-                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
-                    <b><kbd>N</kbd></b> <span>Create New Task</span>
-                    <b><kbd>ESC</kbd></b> <span>Close Modals / Menus</span>
-                    <b><kbd>↑</kbd> / <kbd>↓</kbd></b> <span>Move Hovered Task Up/Down</span>
-                    <b><kbd>←</kbd> / <kbd>→</kbd></b> <span>Move Hovered Task Left/Right</span>
-                </div>
-            </div>
+            <h3 style="margin-bottom: 5px;">Trodo Pro Guide</h3>
+            <p style="font-size: 13px; opacity: 0.8; line-height: 1.5;">Welcome to Trodo! This is a spatial, real-time Kanban board. Drag the background to pan, and use your mouse wheel to zoom in and out.</p>
+            
+            <h4 style="margin-top: 10px; font-size: 12px; text-transform: uppercase; opacity: 0.6;">Keyboard Shortcuts</h4>
+            <ul style="font-size: 13px; list-style: none; display: flex; flex-direction: column; gap: 8px;">
+                <li><kbd style="background: var(--col-bg); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color);">N</kbd> - Create a new task</li>
+                <li><kbd style="background: var(--col-bg); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color);">Enter</kbd> - Save task / Confirm dialog</li>
+                <li><kbd style="background: var(--col-bg); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color);">Esc</kbd> - Close modals / Cancel</li>
+                <li><kbd style="background: var(--col-bg); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color);">Arrows</kbd> - Move hovered task (Up/Down/Left/Right)</li>
+            </ul>
+
             <div class="modal-actions">
-                <button class="primary" onclick="app.toggleHelp()">Got it</button>
+                <button class="primary" onclick="document.getElementById('guide-modal').classList.remove('active'); setTimeout(()=>document.getElementById('guide-modal').style.display='none',200);">Got it</button>
             </div>
         </div>
     </div>
@@ -517,7 +492,7 @@ const Logger = {
 };
 
 const app = {
-    state: { notes: {}, archived: {}, users: {}, chat: [], settings: { reviewEnabled: false } },
+    state: { notes: {}, users: {}, chat: [], settings: { reviewEnabled: false }, archived: {} },
     localNicknames: {},
     myId: null, peer: null, connections: {},
     transform: { scale: 1, x: 0, y: 0 },
@@ -652,6 +627,53 @@ const app = {
     confirm: function(msg, callback) { this.dialog({title: 'Confirm Action', msg, type: 'confirm'}, res => { if(res) callback(); }); },
     promptUser: function(title, msg, defaultVal, callback) { this.dialog({title, msg, type: 'prompt', defaultVal}, callback); },
 
+    openGuide: function() {
+        const modal = document.getElementById('guide-modal');
+        modal.style.display = 'flex';
+        void modal.offsetWidth;
+        modal.classList.add('active');
+    },
+
+    fireConfetti: function(x, y) {
+        const colors = ['#ff3b30', '#34c759', '#0066cc', '#ff9500', '#af52de'];
+        for(let i=0; i<40; i++) {
+            const conf = document.createElement('div');
+            conf.className = 'confetti';
+            conf.style.left = x + 'px';
+            conf.style.top = y + 'px';
+            conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 50 + Math.random() * 150;
+            const tx = Math.cos(angle) * velocity;
+            const ty = Math.sin(angle) * velocity - 100;
+            conf.style.setProperty('--tx', `${tx}px`);
+            conf.style.setProperty('--ty', `${ty}px`);
+            conf.style.animation = `confetti-pop 1s cubic-bezier(0.25, 0.8, 0.25, 1) forwards`;
+            document.body.appendChild(conf);
+            setTimeout(() => conf.remove(), 1000);
+        }
+    },
+
+    archiveDone: function() {
+        this.confirm("Archive all completed tasks? They will be hidden from the board.", () => {
+            if(!this.state.archived) this.state.archived = {};
+            let changed = false;
+            Object.values(this.state.notes).forEach(n => {
+                if(n.status === 'done') {
+                    this.state.archived[n.id] = n;
+                    delete this.state.notes[n.id];
+                    changed = true;
+                }
+            });
+            if(changed) {
+                this.saveState();
+                this.renderNotes();
+                this.broadcast({ type: 'FULL_STATE', state: this.state });
+                this.toast("Tasks archived successfully.");
+            }
+        });
+    },
+
     // --- PEER JS ---
     initPeer: function(customId = null, autoConnectTo = null) {
         if(this.peer) this.peer.destroy();
@@ -708,12 +730,6 @@ const app = {
                     e.preventDefault();
                     return;
                 }
-                const help = document.getElementById('help-overlay');
-                if (help.classList.contains('active')) {
-                    this.toggleHelp();
-                    e.preventDefault();
-                    return;
-                }
             }
 
             if(['INPUT', 'TEXTAREA'].includes(e.target.tagName) && e.key !== 'Escape') return;
@@ -722,8 +738,8 @@ const app = {
                 this.closeModal();
                 document.getElementById('context-menu').style.display = 'none';
                 document.getElementById('chat-panel').classList.remove('open');
-                document.getElementById('help-overlay').classList.remove('active');
-                setTimeout(() => document.getElementById('help-overlay').style.display = 'none', 200);
+                document.getElementById('guide-modal').classList.remove('active');
+                setTimeout(()=>document.getElementById('guide-modal').style.display='none',200);
             }
 
             if (e.key.toLowerCase() === 'n' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
@@ -963,18 +979,20 @@ const app = {
                 moveBtnHtml = `<button class="quick-move-btn" onclick="app.moveNoteNetwork(app.state.notes['${note.id}'], '${nextColName}'); event.stopPropagation();" title="${tooltipText}">></button>`;
             }
 
-            // History Tooltip Logic
-            const createdDate = new Date(note.timestamps.created).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            // History Tooltip Generation
+            const createdDate = new Date(note.timestamps.created).toLocaleDateString(undefined, {month:'short', day:'numeric'});
             let historyHtml = (note.history || []).map(h => {
                 const uName = this.localNicknames[h.user] || (this.state.users[h.user] ? this.state.users[h.user].name : 'Unknown');
                 const timeStr = new Date(h.time).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
-                return `<div style="display:flex; justify-content:space-between; gap:15px;"><span>${h.action} (${uName})</span> <span style="opacity:0.6">${timeStr}</span></div>`;
-            }).reverse().join('');
+                return `<div><b>${h.action}</b> by ${uName}<br><span style="font-size:9px;opacity:0.7">${timeStr}</span></div>`;
+            }).reverse().join('<hr style="margin:4px 0; border:none; border-top:1px solid rgba(128,128,128,0.2)">');
             
-            const historyTooltip = `<div class="history-hover-container">
-                <span class="created-text">📅 ${createdDate}</span>
-                <div class="history-tooltip">${historyHtml || 'No history yet'}</div>
-            </div>`;
+            const timestampHtml = `
+                <div class="history-hover-area">
+                    ${createdDate}
+                    <div class="history-tooltip">${historyHtml}</div>
+                </div>
+            `;
 
             el.innerHTML = `
                 ${moveBtnHtml}
@@ -988,9 +1006,9 @@ const app = {
                 <div class="note-meta">
                     <div style="display:flex; align-items:center; z-index:5;">
                         ${actionHtml}
+                        ${timestampHtml}
                         ${note.assumedTimeSpan ? `<span style="opacity:0.7; font-weight:700;">${(note.assumedTimeSpan/3600000).toFixed(1)}h</span>` : ''}
                     </div>
-                    ${historyTooltip}
                     ${spinnerHtml}
                 </div>
                 ${progressHtml}
@@ -1125,22 +1143,11 @@ const app = {
         window.addEventListener('mouseup', () => this.isPanning = false);
     },
 
-    getDragAfterElement: function(container, y) {
-        const draggableElements = [...container.querySelectorAll('.note:not(.dragging)')];
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
-            if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
-            else return closest;
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
-    },
-
     setupDragAndDrop: function() {
-        let draggedId = null;
         document.addEventListener('dragstart', (e) => {
             const el = e.target.closest('.note');
             if (el && !e.target.isContentEditable) { 
-                draggedId = el.dataset.id; 
+                e.dataTransfer.setData('text/plain', el.dataset.id);
                 const randomRot = (Math.random() - 0.5) * 6;
                 el.style.setProperty('--rot', `${randomRot}deg`); 
                 el.classList.add('dragging');
@@ -1150,7 +1157,6 @@ const app = {
         document.addEventListener('dragend', (e) => {
             const el = e.target.closest('.note');
             if (el) el.classList.remove('dragging'); 
-            draggedId = null;
             document.querySelectorAll('.drop-spacer').forEach(s => s.remove());
         });
 
@@ -1169,7 +1175,14 @@ const app = {
                     spacer.className = 'drop-spacer';
                 }
                 
-                const afterElement = this.getDragAfterElement(col, e.clientY);
+                const draggableElements = [...col.querySelectorAll('.note:not(.dragging)')];
+                const afterElement = draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = e.clientY - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+                    else return closest;
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+
                 if (afterElement == null) col.appendChild(spacer);
                 else col.insertBefore(spacer, afterElement);
             });
@@ -1177,9 +1190,12 @@ const app = {
             col.addEventListener('drop', e => {
                 e.preventDefault();
                 document.querySelectorAll('.drop-spacer').forEach(s => s.remove());
+                const draggedId = e.dataTransfer.getData('text/plain');
                 if (!draggedId) return;
                 
                 const note = this.state.notes[draggedId];
+                if(!note) return;
+
                 const newStatus = col.dataset.status;
                 
                 // Calculate new visual order
@@ -1222,7 +1238,11 @@ const app = {
             if (newStatus === 'done' && oldStatus !== 'done') { 
                 note.timestamps.completed = Date.now(); 
                 note.history.push({ action: 'Completed', user: this.myId, time: Date.now() });
-                this.triggerConfetti(note.id);
+                
+                // Confetti!
+                const doneCol = document.getElementById('col-done');
+                const rect = doneCol.getBoundingClientRect();
+                this.fireConfetti(rect.left + rect.width/2, rect.top + 100);
             }
             if (newStatus === 'review' && oldStatus !== 'review') {
                 note.history.push({ action: 'Moved to Review', user: this.myId, time: Date.now() });
@@ -1247,53 +1267,6 @@ const app = {
         } else {
             proceedWithDrop();
         }
-    },
-
-    triggerConfetti: function(noteId) {
-        const noteEl = document.getElementById(`note-${noteId}`);
-        if (!noteEl) return;
-        const rect = noteEl.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        
-        const colors = ['#ff3b30', '#34c759', '#0066cc', '#ff9500', '#af52de'];
-        for (let i = 0; i < 30; i++) {
-            const conf = document.createElement('div');
-            conf.className = 'confetti';
-            conf.style.left = centerX + 'px';
-            conf.style.top = centerY + 'px';
-            conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-            const angle = Math.random() * Math.PI * 2;
-            const velocity = 50 + Math.random() * 100;
-            const tx = Math.cos(angle) * velocity;
-            const ty = Math.sin(angle) * velocity - 50;
-            conf.style.setProperty('--tx', `${tx}px`);
-            conf.style.setProperty('--ty', `${ty}px`);
-            document.body.appendChild(conf);
-            setTimeout(() => conf.remove(), 1000);
-        }
-    },
-
-    archiveDoneTasks: function() {
-        this.confirm("Archive all DONE tasks? They will be hidden from the board.", () => {
-            if (!this.state.archived) this.state.archived = {};
-            let archivedCount = 0;
-            Object.keys(this.state.notes).forEach(id => {
-                if (this.state.notes[id].status === 'done') {
-                    this.state.archived[id] = this.state.notes[id];
-                    delete this.state.notes[id];
-                    archivedCount++;
-                }
-            });
-            if (archivedCount > 0) {
-                this.saveState();
-                this.renderNotes();
-                this.broadcast({ type: 'FULL_STATE', state: this.state });
-                this.toast(`${archivedCount} tasks archived.`);
-            } else {
-                this.toast("No completed tasks to archive.");
-            }
-        });
     },
 
     updateProgressUI: function() {
@@ -1339,20 +1312,6 @@ const app = {
 
         this.selectColor(null, isEditing ? (note.color||'') : '');
 
-        // Render History Log
-        const historyContainer = document.getElementById('history-container');
-        const historyLog = document.getElementById('note-history-log');
-        if (isEditing && note.history && note.history.length > 0) {
-            historyLog.innerHTML = note.history.map(h => {
-                const uName = this.localNicknames[h.user] || (this.state.users[h.user] ? this.state.users[h.user].name : 'Unknown');
-                const timeStr = new Date(h.time).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
-                return `<div class="history-entry"><span>${h.action} by <b>${uName}</b></span> <span class="time">${timeStr}</span></div>`;
-            }).reverse().join('');
-            historyContainer.style.display = 'flex';
-        } else {
-            historyContainer.style.display = 'none';
-        }
-
         modal.style.display = 'flex';
         void modal.offsetWidth; 
         modal.classList.add('active');
@@ -1363,18 +1322,6 @@ const app = {
         const m = document.getElementById('modal-overlay');
         m.classList.remove('active');
         setTimeout(()=>m.style.display = 'none', 200);
-    },
-
-    toggleHelp: function() {
-        const h = document.getElementById('help-overlay');
-        if (h.classList.contains('active')) {
-            h.classList.remove('active');
-            setTimeout(()=>h.style.display = 'none', 200);
-        } else {
-            h.style.display = 'flex';
-            void h.offsetWidth;
-            h.classList.add('active');
-        }
     },
 
     selectColor: function(element, color) {
