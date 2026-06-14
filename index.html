@@ -125,10 +125,10 @@
             85%, 100% { background-position: 30px 0; }
         }
         @keyframes drop {
-            0%, 15% { transform: translateY(-40px); opacity: 0; }
-            25% { transform: translateY(-40px); opacity: 1; }
-            35%, 75% { transform: translateY(0); opacity: 1; } /* Shape drops into the stopped box */
-            80%, 100% { transform: translateY(0); opacity: 0; }
+            0%, 20% { transform: translate(0, -40px); opacity: 0; }
+            25% { transform: translate(0, -40px); opacity: 1; }
+            35%, 70% { transform: translate(0, 0); opacity: 1; } /* Shape drops into the stopped box */
+            80%, 100% { transform: translate(30px, 0); opacity: 0; } /* Moves right with the box */
         }
         @keyframes shape-shift { 
             0%, 20% { border-radius: 50%; clip-path: none; } /* Circle */
@@ -269,6 +269,9 @@
         /* Confetti Animation */
         .confetti { position: fixed; width: 8px; height: 8px; pointer-events: none; z-index: 9999; border-radius: 2px; }
         @keyframes confetti-pop { 0% { transform: translate(0,0) rotate(0deg) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) rotate(720deg) scale(0); opacity: 0; } }
+        
+        /* API Code Block */
+        pre.api-code { background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; overflow-x: auto; margin-top: 5px; border: 1px solid #333; }
     </style>
 </head>
 <body>
@@ -393,7 +396,7 @@
 
     <!-- Guide Modal -->
     <div id="guide-modal" class="overlay" onmousedown="if(event.target===this) this.classList.remove('active'); setTimeout(()=>this.style.display='none',200);">
-        <div class="modal" style="width: 400px;">
+        <div class="modal" style="width: 500px; max-height: 85vh; overflow-y: auto;">
             <h3 style="margin-bottom: 5px;">Trodo Pro Guide</h3>
             <p style="font-size: 13px; opacity: 0.8; line-height: 1.5;">Welcome to Trodo! This is a spatial, real-time Kanban board. Drag the background to pan, and use your mouse wheel to zoom in and out.</p>
             
@@ -404,6 +407,37 @@
                 <li><kbd style="background: var(--col-bg); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color);">Esc</kbd> - Close modals / Cancel</li>
                 <li><kbd style="background: var(--col-bg); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color);">Arrows</kbd> - Move hovered task (Up/Down/Left/Right)</li>
             </ul>
+
+            <h4 style="margin-top: 15px; font-size: 12px; text-transform: uppercase; opacity: 0.6;">🤖 Robot / Agent API</h4>
+            <p style="font-size: 12px; opacity: 0.8; line-height: 1.4;">Trodo exposes a local API for injected scripts or browser extensions to automate tasks. You must authenticate first.</p>
+            
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+                <span style="font-size: 12px; font-weight: bold;">Your API Code:</span>
+                <code id="api-code-display" style="background: var(--col-bg); padding: 4px 8px; border-radius: 4px; user-select: all;"></code>
+                <button onclick="app.resetApiCode()" style="padding: 4px 8px; font-size: 10px;">Reset Code</button>
+            </div>
+
+            <pre class="api-code">
+// 1. Authenticate
+TrodoAPI.authenticate('YOUR_API_CODE');
+
+// 2. Get Tasks
+const todo = TrodoAPI.getTasks('todo');
+const myJobs = TrodoAPI.getAssignedTasks('Robot');
+
+// 3. Move & Update
+TrodoAPI.moveTask(myJobs[0].id, 'in-progress');
+TrodoAPI.updateTask(myJobs[0].id, { desc: 'Processing data...' });
+
+// 4. Chat
+TrodoAPI.sendChat('I have started working on the task!');
+
+// 5. Listen for User Changes
+TrodoAPI.onTaskUpdated((task) => {
+    console.log('Task changed by user:', task);
+});
+            </pre>
+            <button onclick="navigator.clipboard.writeText(document.querySelector('.api-code').innerText); app.toast('API Code Copied!');" style="font-size: 10px; padding: 4px 8px; margin-top: 4px;">Copy Example</button>
 
             <div class="modal-actions">
                 <button class="primary" onclick="document.getElementById('guide-modal').classList.remove('active'); setTimeout(()=>document.getElementById('guide-modal').style.display='none',200);">Got it</button>
@@ -484,6 +518,17 @@
                     <input type="number" id="note-time" value="1" min="0.1" step="0.1" disabled placeholder="e.g. 1.5">
                 </div>
 
+                <div class="form-group full">
+                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                        <input type="checkbox" id="enable-assign" onchange="document.getElementById('assign-ui').style.display = this.checked ? 'block' : 'none'">
+                        Assign Job
+                    </label>
+                    <div id="assign-ui" style="display:none; margin-top:4px;">
+                        <input type="text" id="note-assignee" list="assignee-list" placeholder="Type name or select..." value="Robot" style="width:100%;">
+                        <datalist id="assignee-list"></datalist>
+                    </div>
+                </div>
+
                 <div class="form-group full" id="history-container" style="display:none;">
                     <label>Task History</label>
                     <div id="note-history-log" class="history-log"></div>
@@ -519,7 +564,7 @@ const Logger = {
 };
 
 const app = {
-    state: { notes: {}, users: {}, chat: [], settings: { reviewEnabled: false }, archived: {} },
+    state: { notes: {}, users: {}, chat: [], settings: { reviewEnabled: false, apiCode: null }, archived: {} },
     localNicknames: {},
     myId: null, peer: null, connections: {},
     transform: { scale: 1, x: 0, y: 0 },
@@ -530,11 +575,14 @@ const app = {
 
     init: async function() {
         this.loadState();
+        if(!this.state.settings.apiCode) this.state.settings.apiCode = Math.random().toString(36).substring(2, 10);
+        
         this.setupTheme();
         this.setupPanZoom();
         this.setupDragAndDrop();
         this.setupShortcuts();
         this.setupChatEvents();
+        this.initAPI();
         this.renderAll();
         setInterval(() => this.updateProgressUI(), 1000);
 
@@ -561,6 +609,88 @@ const app = {
 
         const urlParams = new URLSearchParams(window.location.search);
         this.initPeer(urlParams.get('myid'), urlParams.get('room'));
+    },
+
+    // --- ROBOT API ---
+    initAPI: function() {
+        window.TrodoAPI = {
+            _authenticated: false,
+            _callbacks: [],
+            authenticate: function(code) {
+                if(code === app.state.settings.apiCode) {
+                    this._authenticated = true;
+                    return "Authenticated successfully.";
+                }
+                return "Authentication failed.";
+            },
+            _checkAuth: function() { if(!this._authenticated) throw new Error("Not authenticated. Call TrodoAPI.authenticate('code') first."); },
+            getTasks: function(column) {
+                this._checkAuth();
+                return Object.values(app.state.notes).filter(n => n.status === column);
+            },
+            getAssignedTasks: function(assignee = 'Robot') {
+                this._checkAuth();
+                return Object.values(app.state.notes).filter(n => n.assignedUser && n.assignedUser.toLowerCase() === assignee.toLowerCase());
+            },
+            moveTask: function(taskId, targetColumn) {
+                this._checkAuth();
+                const note = app.state.notes[taskId];
+                if(note) app.moveNoteNetwork(note, targetColumn);
+            },
+            updateTask: function(taskId, updates) {
+                this._checkAuth();
+                const note = app.state.notes[taskId];
+                if(note) {
+                    Object.assign(note, updates);
+                    note.timestamps.lastModified = Date.now();
+                    if(!note.history) note.history = [];
+                    note.history.push({ action: 'Updated by API', user: 'API', time: Date.now() });
+                    app.saveState(); app.renderNotes(); app.broadcast({type:'NOTE_UPDATE', note});
+                }
+            },
+            createTask: function(taskData) {
+                this._checkAuth();
+                const id = 'note_' + Date.now();
+                const note = {
+                    id, subject: taskData.subject || 'API Task', desc: taskData.desc || '',
+                    priority: taskData.priority || 'default', tags: taskData.tags || [], color: taskData.color || '',
+                    assumedTimeSpan: taskData.assumedTimeSpan || null, status: taskData.status || 'todo',
+                    assignedUser: taskData.assignedUser || null, accumulatedProgressTime: 0, isPaused: false,
+                    orderIndex: 0, history: [{ action: 'Created via API', user: 'API', time: Date.now() }],
+                    timestamps: { created: Date.now(), inProgress: null, completed: null, lastModified: Date.now() }
+                };
+                app.state.notes[id] = note;
+                app.saveState(); app.renderNotes(); app.broadcast({type:'NOTE_UPDATE', note});
+                return id;
+            },
+            deleteTask: function(taskId) {
+                this._checkAuth();
+                delete app.state.notes[taskId];
+                app.saveState(); app.renderNotes(); app.broadcast({type:'NOTE_DELETED', noteId: taskId});
+            },
+            duplicateTask: function(taskId) {
+                this._checkAuth();
+                app.ctxNoteId = taskId;
+                app.ctxDuplicate();
+            },
+            sendChat: function(message) {
+                this._checkAuth();
+                const msg = { user: '🤖 Robot', msg: message, time: Date.now() };
+                app.state.chat.push(msg);
+                app.saveState(); app.renderChat(); app.broadcast({type:'CHAT', msg});
+            },
+            onTaskUpdated: function(callback) {
+                this._checkAuth();
+                this._callbacks.push(callback);
+            }
+        };
+    },
+
+    resetApiCode: function() {
+        this.state.settings.apiCode = Math.random().toString(36).substring(2, 10);
+        this.saveState();
+        document.getElementById('api-code-display').innerText = this.state.settings.apiCode;
+        this.toast("API Code Reset!");
     },
 
     updateFavicon: function() {
@@ -655,6 +785,7 @@ const app = {
     promptUser: function(title, msg, defaultVal, callback) { this.dialog({title, msg, type: 'prompt', defaultVal}, callback); },
 
     openGuide: function() {
+        document.getElementById('api-code-display').innerText = this.state.settings.apiCode;
         const modal = document.getElementById('guide-modal');
         modal.style.display = 'flex';
         void modal.offsetWidth;
@@ -920,7 +1051,13 @@ const app = {
             this.state.chat = Array.from(new Map(allChat.map(item => [`${item.time}_${item.user}`, item])).values()).sort((a,b) => a.time - b.time);
             this.saveState(); this.renderAll();
         } 
-        else if (data.type === 'NOTE_UPDATE') { this.state.notes[data.note.id] = data.note; this.saveState(); this.renderNotes(); }
+        else if (data.type === 'NOTE_UPDATE') { 
+            this.state.notes[data.note.id] = data.note; 
+            this.saveState(); this.renderNotes(); 
+            if(window.TrodoAPI && window.TrodoAPI._callbacks) {
+                window.TrodoAPI._callbacks.forEach(cb => cb(data.note));
+            }
+        }
         else if (data.type === 'NOTE_DELETED') { delete this.state.notes[data.noteId]; this.saveState(); this.renderNotes(); }
         else if (data.type === 'USER_UPDATE') { this.state.users[data.user.id] = data.user; this.saveState(); this.renderUsers(); this.renderChat(); }
         else if (data.type === 'CHAT') {
@@ -977,7 +1114,7 @@ const app = {
         if(!container) return;
         container.innerHTML = this.state.chat.map(c => {
             const isMe = c.user === this.myId;
-            const u = this.localNicknames[c.user] || (this.state.users[c.user] ? this.state.users[c.user].name : 'Unknown');
+            const u = c.user === '🤖 Robot' ? c.user : (this.localNicknames[c.user] || (this.state.users[c.user] ? this.state.users[c.user].name : 'Unknown'));
             const time = new Date(c.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             return `<div class="chat-msg ${isMe ? 'self' : ''}">
                 ${!isMe ? `<strong style="font-size:11px; opacity:0.8; margin-bottom:4px; display:block;">${u}</strong>` : ''}
@@ -1023,9 +1160,21 @@ const app = {
 
             let tagsHtml = (note.tags||[]).map(t => `<span class="tag">${t}</span>`).join('');
             let userHtml = '';
-            if (note.assignedUser && this.state.users[note.assignedUser] && note.assignedUser !== this.myId) {
-                const displayName = this.localNicknames[note.assignedUser] || this.state.users[note.assignedUser].name;
-                userHtml = `<div class="user-avatar" style="width:20px;height:20px;font-size:9px;position:absolute;top:10px;right:10px; border:none;">${displayName.charAt(0)}</div>`;
+            if (note.assignedUser) {
+                let displayChar = note.assignedUser.charAt(0).toUpperCase();
+                let tooltipName = note.assignedUser;
+                
+                if (note.assignedUser.toLowerCase() === 'robot') {
+                    displayChar = '🤖';
+                } else if (this.state.users[note.assignedUser]) {
+                    tooltipName = this.localNicknames[note.assignedUser] || this.state.users[note.assignedUser].name;
+                    displayChar = tooltipName.charAt(0).toUpperCase();
+                }
+                
+                userHtml = `<div class="user-avatar" style="width:20px;height:20px;font-size:10px;position:absolute;top:10px;right:10px; border:none; z-index:10;">
+                    ${displayChar}
+                    <div class="tooltip">${tooltipName}</div>
+                </div>`;
             }
 
             let progressHtml = '', actionHtml = '', spinnerHtml = '';
@@ -1065,7 +1214,7 @@ const app = {
             // History Tooltip Generation
             const createdDate = new Date(note.timestamps.created).toLocaleDateString(undefined, {month:'short', day:'numeric'});
             let historyHtml = (note.history || []).map(h => {
-                const uName = this.localNicknames[h.user] || (this.state.users[h.user] ? this.state.users[h.user].name : 'Unknown');
+                const uName = h.user === 'API' ? '🤖 API' : (this.localNicknames[h.user] || (this.state.users[h.user] ? this.state.users[h.user].name : 'Unknown'));
                 const timeStr = new Date(h.time).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
                 return `<div><b>${h.action}</b> by ${uName}<br><span style="font-size:9px;opacity:0.7">${timeStr}</span></div>`;
             }).reverse().join('<hr style="margin:4px 0; border:none; border-top:1px solid rgba(128,128,128,0.2)">');
@@ -1226,6 +1375,16 @@ const app = {
         window.addEventListener('mouseup', () => this.isPanning = false);
     },
 
+    getDragAfterElement: function(container, y) {
+        const draggableElements = [...container.querySelectorAll('.note:not(.dragging)')];
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+            else return closest;
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    },
+
     setupDragAndDrop: function() {
         document.addEventListener('dragstart', (e) => {
             const el = e.target.closest('.note');
@@ -1349,6 +1508,10 @@ const app = {
             note.timestamps.lastModified = Date.now();
             this.saveState(); this.renderNotes();
             this.broadcast({ type: 'FULL_STATE', state: this.state }); // Broadcast full state to sync order perfectly
+            
+            if(window.TrodoAPI && window.TrodoAPI._callbacks) {
+                window.TrodoAPI._callbacks.forEach(cb => cb(note));
+            }
         };
 
         if (newStatus !== oldStatus && ((oldStatus === 'done' && newStatus !== 'done') || (oldStatus === 'review' && newStatus === 'in-progress') || (oldStatus === 'in-progress' && newStatus === 'todo'))) {
@@ -1406,12 +1569,24 @@ const app = {
 
         this.selectColor(null, isEditing ? (note.color||'') : '');
 
+        // Assignee Logic
+        const assigneeList = document.getElementById('assignee-list');
+        assigneeList.innerHTML = '<option value="Robot"></option>';
+        Object.values(this.state.users).forEach(u => {
+            assigneeList.innerHTML += `<option value="${this.localNicknames[u.id] || u.name}"></option>`;
+        });
+
+        const hasAssignee = isEditing && note.assignedUser;
+        document.getElementById('enable-assign').checked = hasAssignee;
+        document.getElementById('assign-ui').style.display = hasAssignee ? 'block' : 'none';
+        document.getElementById('note-assignee').value = hasAssignee ? note.assignedUser : 'Robot';
+
         // Render History Log
         const historyContainer = document.getElementById('history-container');
         const historyLog = document.getElementById('note-history-log');
         if (isEditing && note.history && note.history.length > 0) {
             historyLog.innerHTML = note.history.map(h => {
-                const uName = this.localNicknames[h.user] || (this.state.users[h.user] ? this.state.users[h.user].name : 'Unknown');
+                const uName = h.user === 'API' ? '🤖 API' : (this.localNicknames[h.user] || (this.state.users[h.user] ? this.state.users[h.user].name : 'Unknown'));
                 const timeStr = new Date(h.time).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
                 return `<div class="history-entry"><span>${h.action} by <b>${uName}</b></span> <span class="time">${timeStr}</span></div>`;
             }).reverse().join('');
@@ -1451,6 +1626,9 @@ const app = {
         const tags = Array.from(document.getElementById('note-tags').selectedOptions).map(o => o.value);
         const useTime = document.getElementById('enable-time').checked;
         const hours = parseFloat(document.getElementById('note-time').value) || 0;
+        
+        const useAssign = document.getElementById('enable-assign').checked;
+        const assignee = useAssign ? document.getElementById('note-assignee').value.trim() : null;
 
         const note = {
             id, subject: subj, desc: document.getElementById('note-desc').value,
@@ -1458,7 +1636,7 @@ const app = {
             tags, color: this.selectedColor,
             assumedTimeSpan: (useTime && hours>0) ? hours * 3600000 : null,
             status: isNew ? 'todo' : this.state.notes[id].status,
-            assignedUser: isNew ? null : this.state.notes[id].assignedUser,
+            assignedUser: assignee,
             accumulatedProgressTime: isNew ? 0 : this.state.notes[id].accumulatedProgressTime,
             isPaused: isNew ? false : this.state.notes[id].isPaused,
             orderIndex: isNew ? 0 : (this.state.notes[id].orderIndex||0),
