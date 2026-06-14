@@ -80,7 +80,7 @@
         #canvas-wrapper { display: flex; gap: 24px; padding: 20px 40px; min-width: 100%; width: max-content; height: calc(100% - 40px); transform-origin: 0 0; transition: transform 0.05s linear; }
         
         /* Columns */
-        .column { background: var(--col-bg); border-radius: 18px; display: flex; flex-direction: column; padding: 18px; gap: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); transition: flex-basis 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); width: 320px; flex-shrink: 0; }
+        .column { background: var(--col-bg); border-radius: 18px; display: flex; flex-direction: column; padding: 18px; gap: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); transition: flex-basis 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); width: 320px; flex-shrink: 0; position: relative; }
         .column-header { font-weight: 800; font-size: 13px; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; color: var(--text-color); position: relative; min-height: 24px; opacity: 0.9; text-transform: uppercase;}
         
         .column-content { flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; min-height: 200px; padding: 4px; padding-bottom: 30px; margin: -4px; }
@@ -118,14 +118,14 @@
         }
         @keyframes conveyor {
             0%, 20% { background-position: -30px 0; }
-            30%, 70% { background-position: 0 0; } /* Box stops perfectly in the middle */
-            80%, 100% { background-position: 30px 0; }
+            30%, 60% { background-position: 0 0; } /* Box stops perfectly in the middle */
+            70%, 100% { background-position: 30px 0; }
         }
         @keyframes drop {
             0%, 20% { transform: translateY(-40px); opacity: 0; }
-            30% { transform: translateY(-40px); opacity: 1; }
-            40%, 70% { transform: translateY(0); opacity: 1; } /* Shape drops into the stopped box */
-            75%, 100% { transform: translateY(0); opacity: 0; }
+            25% { transform: translateY(-40px); opacity: 1; }
+            35%, 60% { transform: translateY(0); opacity: 1; } /* Shape drops into the stopped box */
+            65%, 100% { transform: translateY(0); opacity: 0; }
         }
         @keyframes shape-shift { 
             0%, 20% { border-radius: 50%; clip-path: none; } /* Circle */
@@ -152,7 +152,7 @@
         .note.dragging { opacity: 0.6; transform: scale(0.95) rotate(var(--rot, 0deg)); z-index: 100; box-shadow: 0 24px 48px rgba(0,0,0,0.3); pointer-events: none; }
         
         /* Drop Target Spacer */
-        .drop-spacer { height: 4px; background: var(--accent-color); border-radius: 2px; margin: 4px 0; transition: all 0.2s; opacity: 0; }
+        .drop-spacer { height: 4px; background: var(--accent-color); border-radius: 2px; margin: 4px 0; transition: all 0.2s; opacity: 0; pointer-events: none; }
         
         .note-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .note-subject { font-weight: 700; font-size: 14px; word-break: break-word; outline: none; border-radius: 4px; transition: background 0.2s; padding: 2px 4px; margin: -2px -4px; }
@@ -200,8 +200,9 @@
         .l-low { width: 16px; aspect-ratio: 1.154; --_g: no-repeat radial-gradient(farthest-side, currentColor 90%, #0000); background: var(--_g) 50% 0, var(--_g) 0 100%, var(--_g) 100% 100%; background-size: 35% calc(35%*1.154); animation: l16 2s infinite; color: var(--text-color); opacity: 0.6; }
 
         /* History Tooltip on Hover */
-        .history-hover-area { position: relative; cursor: help; font-size: 10px; opacity: 0.6; font-weight: 600; margin: 0 8px; }
-        .history-hover-area:hover { opacity: 1; }
+        .history-hover-area { position: relative; cursor: help; font-size: 10px; opacity: 0; font-weight: 600; margin: 0 8px; transition: opacity 0.2s; pointer-events: none; }
+        .note:hover .history-hover-area { opacity: 0.6; pointer-events: auto; }
+        .history-hover-area:hover { opacity: 1 !important; }
         .history-tooltip { display: none; position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: var(--text-color); color: var(--bg-color); padding: 10px; border-radius: 8px; width: max-content; max-width: 220px; z-index: 200; box-shadow: var(--shadow); pointer-events: none; font-weight: normal; text-align: left; line-height: 1.4; }
         .history-hover-area:hover .history-tooltip { display: flex; flex-direction: column; gap: 6px; }
 
@@ -237,6 +238,12 @@
         .form-group.full { grid-column: 1 / -1; }
         .form-group label { font-size: 11px; font-weight: 700; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; grid-column: 1 / -1; border-top: 1px solid var(--border-color); padding-top: 16px;}
+
+        /* History Log in Modal */
+        .history-log { display: flex; flex-direction: column; gap: 6px; max-height: 120px; overflow-y: auto; font-size: 11px; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px; margin-top: 4px; border: 1px solid var(--border-color); }
+        [data-theme="dark"] .history-log { background: rgba(255,255,255,0.03); }
+        .history-entry { display: flex; justify-content: space-between; opacity: 0.85; }
+        .history-entry .time { opacity: 0.6; font-size: 10px; }
 
         /* Custom Toast */
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 1000; pointer-events: none; }
@@ -336,6 +343,9 @@
                     <button class="archive-btn" onclick="app.archiveDone()">Archive Done</button>
                 </div>
                 <div class="column-content" data-status="done"></div>
+                <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                    <button onclick="app.openArchive()" style="font-size: 10px; padding: 4px 8px; background: transparent; border: 1px solid var(--border-color);">🗄️ View Archive</button>
+                </div>
             </div>
         </div>
     </div>
@@ -396,6 +406,17 @@
 
             <div class="modal-actions">
                 <button class="primary" onclick="document.getElementById('guide-modal').classList.remove('active'); setTimeout(()=>document.getElementById('guide-modal').style.display='none',200);">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Archive Modal -->
+    <div id="archive-modal" class="overlay" onmousedown="if(event.target===this) this.classList.remove('active'); setTimeout(()=>this.style.display='none',200);">
+        <div class="modal" style="width: 500px; max-height: 80vh;">
+            <h3 style="margin-bottom: 5px;">Archived Tasks</h3>
+            <div id="archive-list" style="overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-top: 10px; padding-right: 5px;"></div>
+            <div class="modal-actions">
+                <button onclick="document.getElementById('archive-modal').classList.remove('active'); setTimeout(()=>document.getElementById('archive-modal').style.display='none',200);">Close</button>
             </div>
         </div>
     </div>
@@ -462,6 +483,11 @@
                     <input type="number" id="note-time" value="1" min="0.1" step="0.1" disabled placeholder="e.g. 1.5">
                 </div>
 
+                <div class="form-group full" id="history-container" style="display:none;">
+                    <label>Task History</label>
+                    <div id="note-history-log" class="history-log"></div>
+                </div>
+
                 <div class="modal-actions">
                     <button onclick="app.closeModal()" style="background:transparent; border-color:transparent;">Cancel</button>
                     <button class="primary" onclick="app.saveNote()">Save Task</button>
@@ -497,7 +523,7 @@ const app = {
     myId: null, peer: null, connections: {},
     transform: { scale: 1, x: 0, y: 0 },
     isPanning: false, startX: 0, startY: 0,
-    hoveredNoteId: null, ctxNoteId: null,
+    hoveredNoteId: null, ctxNoteId: null, draggedNoteId: null,
     unreadChat: 0, selectedColor: '',
     isTabActive: true, hasUnseenChanges: false,
 
@@ -674,6 +700,52 @@ const app = {
         });
     },
 
+    openArchive: function() {
+        const modal = document.getElementById('archive-modal');
+        const list = document.getElementById('archive-list');
+        list.innerHTML = '';
+        
+        if(!this.state.archived || Object.keys(this.state.archived).length === 0) {
+            list.innerHTML = '<div style="opacity:0.5; font-size:12px;">No archived tasks found.</div>';
+        } else {
+            Object.values(this.state.archived).forEach(note => {
+                const el = document.createElement('div');
+                el.style.cssText = `background: var(--col-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;`;
+                el.innerHTML = `
+                    <div>
+                        <div style="font-weight:bold; font-size:13px;">${note.subject}</div>
+                        <div style="font-size:10px; opacity:0.6;">Archived</div>
+                    </div>
+                    <button onclick="app.restoreArchive('${note.id}')" style="padding: 4px 8px; font-size: 10px;">Restore</button>
+                `;
+                list.appendChild(el);
+            });
+        }
+        
+        modal.style.display = 'flex';
+        void modal.offsetWidth;
+        modal.classList.add('active');
+    },
+
+    restoreArchive: function(id) {
+        if(this.state.archived && this.state.archived[id]) {
+            const note = this.state.archived[id];
+            note.status = 'done'; // Restore to done column
+            if (!note.history) note.history = [];
+            note.history.push({ action: 'Restored from Archive', user: this.myId, time: Date.now() });
+            note.timestamps.lastModified = Date.now();
+            
+            this.state.notes[id] = note;
+            delete this.state.archived[id];
+            
+            this.saveState();
+            this.renderNotes();
+            this.broadcast({ type: 'FULL_STATE', state: this.state });
+            this.openArchive(); // Refresh list
+            this.toast("Task restored.");
+        }
+    },
+
     // --- PEER JS ---
     initPeer: function(customId = null, autoConnectTo = null) {
         if(this.peer) this.peer.destroy();
@@ -740,6 +812,8 @@ const app = {
                 document.getElementById('chat-panel').classList.remove('open');
                 document.getElementById('guide-modal').classList.remove('active');
                 setTimeout(()=>document.getElementById('guide-modal').style.display='none',200);
+                document.getElementById('archive-modal').classList.remove('active');
+                setTimeout(()=>document.getElementById('archive-modal').style.display='none',200);
             }
 
             if (e.key.toLowerCase() === 'n' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
@@ -792,6 +866,7 @@ const app = {
     loadState: function() {
         const saved = localStorage.getItem('kanban_state');
         if (saved) { try { this.state = { ...this.state, ...JSON.parse(saved) }; } catch(e){} }
+        if (!this.state.archived) this.state.archived = {};
         this.localNicknames = JSON.parse(localStorage.getItem('kanban_nicks') || '{}');
         document.getElementById('toggle-review').checked = this.state.settings.reviewEnabled;
         this.toggleReviewColumn(this.state.settings.reviewEnabled, false);
@@ -826,6 +901,9 @@ const app = {
             for (const id in data.state.notes) {
                 const rem = data.state.notes[id], loc = this.state.notes[id];
                 if (!loc || rem.timestamps.lastModified > loc.timestamps.lastModified) this.state.notes[id] = rem;
+            }
+            if(data.state.archived) {
+                this.state.archived = { ...this.state.archived, ...data.state.archived };
             }
             if(data.state.settings) {
                 this.state.settings = data.state.settings;
@@ -1143,10 +1221,21 @@ const app = {
         window.addEventListener('mouseup', () => this.isPanning = false);
     },
 
+    getDragAfterElement: function(container, y) {
+        const draggableElements = [...container.querySelectorAll('.note:not(.dragging)')];
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+            else return closest;
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    },
+
     setupDragAndDrop: function() {
         document.addEventListener('dragstart', (e) => {
             const el = e.target.closest('.note');
             if (el && !e.target.isContentEditable) { 
+                this.draggedNoteId = el.dataset.id; 
                 e.dataTransfer.setData('text/plain', el.dataset.id);
                 const randomRot = (Math.random() - 0.5) * 6;
                 el.style.setProperty('--rot', `${randomRot}deg`); 
@@ -1157,6 +1246,7 @@ const app = {
         document.addEventListener('dragend', (e) => {
             const el = e.target.closest('.note');
             if (el) el.classList.remove('dragging'); 
+            this.draggedNoteId = null;
             document.querySelectorAll('.drop-spacer').forEach(s => s.remove());
         });
 
@@ -1175,14 +1265,7 @@ const app = {
                     spacer.className = 'drop-spacer';
                 }
                 
-                const draggableElements = [...col.querySelectorAll('.note:not(.dragging)')];
-                const afterElement = draggableElements.reduce((closest, child) => {
-                    const box = child.getBoundingClientRect();
-                    const offset = e.clientY - box.top - box.height / 2;
-                    if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
-                    else return closest;
-                }, { offset: Number.NEGATIVE_INFINITY }).element;
-
+                const afterElement = this.getDragAfterElement(col, e.clientY);
                 if (afterElement == null) col.appendChild(spacer);
                 else col.insertBefore(spacer, afterElement);
             });
@@ -1190,7 +1273,8 @@ const app = {
             col.addEventListener('drop', e => {
                 e.preventDefault();
                 document.querySelectorAll('.drop-spacer').forEach(s => s.remove());
-                const draggedId = e.dataTransfer.getData('text/plain');
+                
+                const draggedId = e.dataTransfer.getData('text/plain') || this.draggedNoteId;
                 if (!draggedId) return;
                 
                 const note = this.state.notes[draggedId];
@@ -1311,6 +1395,20 @@ const app = {
         Array.from(document.getElementById('note-tags').options).forEach(opt => opt.selected = tags.includes(opt.value));
 
         this.selectColor(null, isEditing ? (note.color||'') : '');
+
+        // Render History Log
+        const historyContainer = document.getElementById('history-container');
+        const historyLog = document.getElementById('note-history-log');
+        if (isEditing && note.history && note.history.length > 0) {
+            historyLog.innerHTML = note.history.map(h => {
+                const uName = this.localNicknames[h.user] || (this.state.users[h.user] ? this.state.users[h.user].name : 'Unknown');
+                const timeStr = new Date(h.time).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+                return `<div class="history-entry"><span>${h.action} by <b>${uName}</b></span> <span class="time">${timeStr}</span></div>`;
+            }).reverse().join('');
+            historyContainer.style.display = 'flex';
+        } else {
+            historyContainer.style.display = 'none';
+        }
 
         modal.style.display = 'flex';
         void modal.offsetWidth; 
