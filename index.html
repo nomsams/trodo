@@ -80,7 +80,7 @@
         #canvas-wrapper { display: flex; gap: 24px; padding: 20px 40px; min-width: 100%; width: max-content; height: calc(100% - 40px); transform-origin: 0 0; transition: transform 0.05s linear; }
         
         /* Columns */
-        .column { background: var(--col-bg); border-radius: 18px; display: flex; flex-direction: column; padding: 18px; gap: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); transition: flex-basis 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); width: 320px; flex-shrink: 0; position: relative; }
+        .column { background: var(--col-bg); border-radius: 18px; display: flex; flex-direction: column; padding: 18px; gap: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); transition: flex-basis 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); width: 320px; flex-shrink: 0; }
         .column-header { font-weight: 800; font-size: 13px; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; color: var(--text-color); position: relative; min-height: 24px; opacity: 0.9; text-transform: uppercase;}
         
         .column-content { flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; min-height: 200px; padding: 4px; padding-bottom: 30px; margin: -4px; }
@@ -96,10 +96,13 @@
             body.review-enabled #col-review { display: flex; }
         }
 
-        /* Archive Button */
+        /* Archive Buttons */
         .archive-btn { display: none; font-size: 10px; padding: 4px 8px; background: transparent; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); cursor: pointer; }
         .archive-btn:hover { background: var(--accent-color); color: white; border-color: var(--accent-color); }
         #col-done:hover .archive-btn { display: block; }
+        
+        .view-archive-btn { font-size: 11px; padding: 6px 8px; background: transparent; border: none; color: var(--text-color); opacity: 0.5; cursor: pointer; text-align: left; margin-top: auto; transition: opacity 0.2s; display: inline-block; width: fit-content; }
+        .view-archive-btn:hover { opacity: 1; text-decoration: underline; }
 
         /* Perfectly Synced Factory Conveyor Animation (Half Speed, Z-Index fixed) */
         .col-loader { width: 90px; height: 16px; position: absolute; left: 50%; transform: translateX(-50%); display: none; opacity: 0.95; overflow: hidden; border-bottom: 2px solid var(--border-color); }
@@ -117,15 +120,15 @@
             z-index: 2; /* Shape falls behind the front lip of the box */
         }
         @keyframes conveyor {
-            0%, 20% { background-position: -30px 0; }
-            30%, 60% { background-position: 0 0; } /* Box stops perfectly in the middle */
-            70%, 100% { background-position: 30px 0; }
+            0%, 15% { background-position: -30px 0; }
+            30%, 70% { background-position: 0 0; } /* Box stops perfectly in the middle */
+            85%, 100% { background-position: 30px 0; }
         }
         @keyframes drop {
-            0%, 20% { transform: translateY(-40px); opacity: 0; }
+            0%, 15% { transform: translateY(-40px); opacity: 0; }
             25% { transform: translateY(-40px); opacity: 1; }
-            35%, 60% { transform: translateY(0); opacity: 1; } /* Shape drops into the stopped box */
-            65%, 100% { transform: translateY(0); opacity: 0; }
+            35%, 75% { transform: translateY(0); opacity: 1; } /* Shape drops into the stopped box */
+            80%, 100% { transform: translateY(0); opacity: 0; }
         }
         @keyframes shape-shift { 
             0%, 20% { border-radius: 50%; clip-path: none; } /* Circle */
@@ -152,7 +155,7 @@
         .note.dragging { opacity: 0.6; transform: scale(0.95) rotate(var(--rot, 0deg)); z-index: 100; box-shadow: 0 24px 48px rgba(0,0,0,0.3); pointer-events: none; }
         
         /* Drop Target Spacer */
-        .drop-spacer { height: 4px; background: var(--accent-color); border-radius: 2px; margin: 4px 0; transition: all 0.2s; opacity: 0; pointer-events: none; }
+        .drop-spacer { height: 4px; background: var(--accent-color); border-radius: 2px; margin: 4px 0; transition: all 0.2s; opacity: 0; }
         
         .note-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .note-subject { font-weight: 700; font-size: 14px; word-break: break-word; outline: none; border-radius: 4px; transition: background 0.2s; padding: 2px 4px; margin: -2px -4px; }
@@ -199,10 +202,10 @@
         @keyframes l16 { 50%,100% {background-position: 100% 100%, 50% 0, 0 100%} }
         .l-low { width: 16px; aspect-ratio: 1.154; --_g: no-repeat radial-gradient(farthest-side, currentColor 90%, #0000); background: var(--_g) 50% 0, var(--_g) 0 100%, var(--_g) 100% 100%; background-size: 35% calc(35%*1.154); animation: l16 2s infinite; color: var(--text-color); opacity: 0.6; }
 
-        /* History Tooltip on Hover */
+        /* History Tooltip on Hover - Hidden by default */
         .history-hover-area { position: relative; cursor: help; font-size: 10px; opacity: 0; font-weight: 600; margin: 0 8px; transition: opacity 0.2s; pointer-events: none; }
         .note:hover .history-hover-area { opacity: 0.6; pointer-events: auto; }
-        .history-hover-area:hover { opacity: 1 !important; }
+        .history-hover-area:hover { opacity: 1; }
         .history-tooltip { display: none; position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: var(--text-color); color: var(--bg-color); padding: 10px; border-radius: 8px; width: max-content; max-width: 220px; z-index: 200; box-shadow: var(--shadow); pointer-events: none; font-weight: normal; text-align: left; line-height: 1.4; }
         .history-hover-area:hover .history-tooltip { display: flex; flex-direction: column; gap: 6px; }
 
@@ -343,9 +346,7 @@
                     <button class="archive-btn" onclick="app.archiveDone()">Archive Done</button>
                 </div>
                 <div class="column-content" data-status="done"></div>
-                <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
-                    <button onclick="app.openArchive()" style="font-size: 10px; padding: 4px 8px; background: transparent; border: 1px solid var(--border-color);">🗄️ View Archive</button>
-                </div>
+                <button class="view-archive-btn" onclick="app.viewArchive()">📂 View Archive</button>
             </div>
         </div>
     </div>
@@ -413,8 +414,8 @@
     <!-- Archive Modal -->
     <div id="archive-modal" class="overlay" onmousedown="if(event.target===this) this.classList.remove('active'); setTimeout(()=>this.style.display='none',200);">
         <div class="modal" style="width: 500px; max-height: 80vh;">
-            <h3 style="margin-bottom: 5px;">Archived Tasks</h3>
-            <div id="archive-list" style="overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-top: 10px; padding-right: 5px;"></div>
+            <h3 style="margin-bottom: 10px;">Archived Tasks</h3>
+            <div id="archive-list" style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1;"></div>
             <div class="modal-actions">
                 <button onclick="document.getElementById('archive-modal').classList.remove('active'); setTimeout(()=>document.getElementById('archive-modal').style.display='none',200);">Close</button>
             </div>
@@ -700,25 +701,28 @@ const app = {
         });
     },
 
-    openArchive: function() {
+    viewArchive: function() {
         const modal = document.getElementById('archive-modal');
         const list = document.getElementById('archive-list');
         list.innerHTML = '';
         
-        if(!this.state.archived || Object.keys(this.state.archived).length === 0) {
-            list.innerHTML = '<div style="opacity:0.5; font-size:12px;">No archived tasks found.</div>';
+        const archivedNotes = Object.values(this.state.archived || {});
+        if (archivedNotes.length === 0) {
+            list.innerHTML = '<div style="opacity:0.5; text-align:center; padding: 20px;">No archived tasks.</div>';
         } else {
-            Object.values(this.state.archived).forEach(note => {
-                const el = document.createElement('div');
-                el.style.cssText = `background: var(--col-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;`;
-                el.innerHTML = `
-                    <div>
-                        <div style="font-weight:bold; font-size:13px;">${note.subject}</div>
-                        <div style="font-size:10px; opacity:0.6;">Archived</div>
+            archivedNotes.sort((a,b) => b.timestamps.completed - a.timestamps.completed).forEach(note => {
+                list.innerHTML += `
+                    <div style="background: var(--col-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: bold; font-size: 13px;">${note.subject}</div>
+                            <div style="font-size: 10px; opacity: 0.6;">Completed: ${new Date(note.timestamps.completed).toLocaleDateString()}</div>
+                        </div>
+                        <div style="display: flex; gap: 5px;">
+                            <button onclick="app.restoreArchive('${note.id}')" style="padding: 4px 8px; font-size: 10px;">Restore</button>
+                            <button onclick="app.deleteArchive('${note.id}')" style="padding: 4px 8px; font-size: 10px; color: var(--urgent-color);">Delete</button>
+                        </div>
                     </div>
-                    <button onclick="app.restoreArchive('${note.id}')" style="padding: 4px 8px; font-size: 10px;">Restore</button>
                 `;
-                list.appendChild(el);
             });
         }
         
@@ -728,21 +732,23 @@ const app = {
     },
 
     restoreArchive: function(id) {
-        if(this.state.archived && this.state.archived[id]) {
-            const note = this.state.archived[id];
-            note.status = 'done'; // Restore to done column
-            if (!note.history) note.history = [];
-            note.history.push({ action: 'Restored from Archive', user: this.myId, time: Date.now() });
-            note.timestamps.lastModified = Date.now();
-            
-            this.state.notes[id] = note;
+        if(this.state.archived[id]) {
+            this.state.notes[id] = this.state.archived[id];
+            this.state.notes[id].status = 'done';
             delete this.state.archived[id];
-            
             this.saveState();
             this.renderNotes();
             this.broadcast({ type: 'FULL_STATE', state: this.state });
-            this.openArchive(); // Refresh list
-            this.toast("Task restored.");
+            this.viewArchive();
+        }
+    },
+
+    deleteArchive: function(id) {
+        if(confirm("Permanently delete this archived task?")) {
+            delete this.state.archived[id];
+            this.saveState();
+            this.broadcast({ type: 'FULL_STATE', state: this.state });
+            this.viewArchive();
         }
     },
 
@@ -866,7 +872,6 @@ const app = {
     loadState: function() {
         const saved = localStorage.getItem('kanban_state');
         if (saved) { try { this.state = { ...this.state, ...JSON.parse(saved) }; } catch(e){} }
-        if (!this.state.archived) this.state.archived = {};
         this.localNicknames = JSON.parse(localStorage.getItem('kanban_nicks') || '{}');
         document.getElementById('toggle-review').checked = this.state.settings.reviewEnabled;
         this.toggleReviewColumn(this.state.settings.reviewEnabled, false);
@@ -902,13 +907,13 @@ const app = {
                 const rem = data.state.notes[id], loc = this.state.notes[id];
                 if (!loc || rem.timestamps.lastModified > loc.timestamps.lastModified) this.state.notes[id] = rem;
             }
-            if(data.state.archived) {
-                this.state.archived = { ...this.state.archived, ...data.state.archived };
-            }
             if(data.state.settings) {
                 this.state.settings = data.state.settings;
                 document.getElementById('toggle-review').checked = this.state.settings.reviewEnabled;
                 this.toggleReviewColumn(this.state.settings.reviewEnabled, false);
+            }
+            if(data.state.archived) {
+                this.state.archived = { ...this.state.archived, ...data.state.archived };
             }
             this.state.users = { ...this.state.users, ...data.state.users };
             const allChat = [...this.state.chat, ...data.state.chat];
@@ -1221,25 +1226,15 @@ const app = {
         window.addEventListener('mouseup', () => this.isPanning = false);
     },
 
-    getDragAfterElement: function(container, y) {
-        const draggableElements = [...container.querySelectorAll('.note:not(.dragging)')];
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
-            if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
-            else return closest;
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
-    },
-
     setupDragAndDrop: function() {
         document.addEventListener('dragstart', (e) => {
             const el = e.target.closest('.note');
             if (el && !e.target.isContentEditable) { 
-                this.draggedNoteId = el.dataset.id; 
+                this.draggedNoteId = el.dataset.id;
                 e.dataTransfer.setData('text/plain', el.dataset.id);
                 const randomRot = (Math.random() - 0.5) * 6;
                 el.style.setProperty('--rot', `${randomRot}deg`); 
-                el.classList.add('dragging');
+                setTimeout(() => el.classList.add('dragging'), 0);
                 e.dataTransfer.effectAllowed = 'move'; 
             }
         });
@@ -1250,7 +1245,9 @@ const app = {
             document.querySelectorAll('.drop-spacer').forEach(s => s.remove());
         });
 
-        document.querySelectorAll('.column-content').forEach(col => {
+        document.querySelectorAll('.column').forEach(col => {
+            const content = col.querySelector('.column-content');
+            
             col.addEventListener('dragover', e => { 
                 e.preventDefault(); 
                 e.dataTransfer.dropEffect = 'move';
@@ -1258,34 +1255,47 @@ const app = {
                 const draggingEl = document.querySelector('.dragging');
                 if(!draggingEl) return;
                 
-                let spacer = col.querySelector('.drop-spacer');
+                let spacer = content.querySelector('.drop-spacer');
                 if (!spacer) {
                     document.querySelectorAll('.drop-spacer').forEach(s => s.remove());
                     spacer = document.createElement('div');
                     spacer.className = 'drop-spacer';
                 }
                 
-                const afterElement = this.getDragAfterElement(col, e.clientY);
-                if (afterElement == null) col.appendChild(spacer);
-                else col.insertBefore(spacer, afterElement);
+                const draggableElements = [...content.querySelectorAll('.note:not(.dragging)')];
+                const afterElement = draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = e.clientY - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+                    else return closest;
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+
+                if (afterElement == null) content.appendChild(spacer);
+                else content.insertBefore(spacer, afterElement);
             });
             
             col.addEventListener('drop', e => {
                 e.preventDefault();
-                document.querySelectorAll('.drop-spacer').forEach(s => s.remove());
-                
-                const draggedId = e.dataTransfer.getData('text/plain') || this.draggedNoteId;
-                if (!draggedId) return;
+                const draggedId = this.draggedNoteId || e.dataTransfer.getData('text/plain');
+                if (!draggedId) {
+                    document.querySelectorAll('.drop-spacer').forEach(s => s.remove());
+                    return;
+                }
                 
                 const note = this.state.notes[draggedId];
-                if(!note) return;
+                if(!note) {
+                    document.querySelectorAll('.drop-spacer').forEach(s => s.remove());
+                    return;
+                }
 
-                const newStatus = col.dataset.status;
+                const newStatus = content.dataset.status;
                 
-                // Calculate new visual order
-                const currentVisualNotes = Array.from(col.querySelectorAll('.note:not(.dragging)')).map(n => n.dataset.id);
-                const layoutElements = Array.from(col.querySelectorAll('.note:not(.dragging), .drop-spacer'));
+                // Calculate new visual order BEFORE removing the spacer
+                const currentVisualNotes = Array.from(content.querySelectorAll('.note:not(.dragging)')).map(n => n.dataset.id);
+                const layoutElements = Array.from(content.querySelectorAll('.note:not(.dragging), .drop-spacer'));
                 const insertIndex = layoutElements.findIndex(el => el.classList.contains('drop-spacer'));
+                
+                document.querySelectorAll('.drop-spacer').forEach(s => s.remove());
                 
                 if (insertIndex !== -1) currentVisualNotes.splice(insertIndex, 0, draggedId);
                 else currentVisualNotes.push(draggedId);
