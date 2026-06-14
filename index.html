@@ -32,7 +32,13 @@
             --shadow: 0 12px 32px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { 
+            box-sizing: border-box; margin: 0; padding: 0; 
+            /* Firefox Scrollbars */
+            scrollbar-width: thin; 
+            scrollbar-color: var(--border-color) transparent;
+        }
+        
         body { font-family: var(--font-family); background: var(--bg-color); color: var(--text-color); overflow: hidden; display: flex; flex-direction: column; height: 100vh; transition: background-color 0.3s, color 0.3s; padding-bottom: env(safe-area-inset-bottom, 20px); }
         
         button { cursor: pointer; border: none; background: var(--col-bg); color: var(--text-color); padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; transition: var(--transition); border: 1px solid var(--border-color); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); }
@@ -43,22 +49,17 @@
         input, select, textarea { background: var(--col-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 13px; outline: none; transition: border-color 0.2s; }
         input:focus, select:focus, textarea:focus { border-color: var(--accent-color); }
         
-        /* Unified Scrollbars */
-        .column-content::-webkit-scrollbar, #chat-messages::-webkit-scrollbar { 
-            width: 4px; 
-            height: 4px; 
-        }
-        .column-content::-webkit-scrollbar-thumb, #chat-messages::-webkit-scrollbar-thumb { 
-            background: var(--border-color); 
-            border-radius: 4px; 
-        }
-        .column-content::-webkit-scrollbar-thumb:hover, #chat-messages::-webkit-scrollbar-thumb:hover { 
-            background: var(--accent-color); 
-        }
+        /* Webkit Scrollbars (Chrome/Safari/Edge) */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
         
         /* Top Bar Layout */
         #top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: transparent; z-index: 100; position: absolute; top:0; left:0; right:0; padding-top: max(15px, env(safe-area-inset-top)); pointer-events: none; }
         .top-group { display: flex; align-items: center; gap: 10px; background: var(--col-bg); padding: 6px 12px; border-radius: 14px; backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--border-color); box-shadow: var(--shadow); pointer-events: auto; }
+        .top-center { position: absolute; left: 50%; transform: translateX(-50%); }
+        @media (max-width: 768px) { .top-center { position: static; transform: none; } }
         
         /* Premium Trodo Logo */
         .brand-logo { font-size: 24px; font-weight: 900; background: linear-gradient(135deg, #FF2A54, #FF9A44, #b266ff); background-size: 200% 200%; animation: gradient-shift 4s ease infinite; -webkit-background-clip: text; color: transparent; letter-spacing: -1.5px; margin-right: 8px; transform: skewX(-6deg); filter: drop-shadow(0 2px 4px rgba(255,42,84,0.3)); cursor: default; user-select: none; }
@@ -82,7 +83,7 @@
         .column { background: var(--col-bg); border-radius: 18px; display: flex; flex-direction: column; padding: 18px; gap: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); transition: flex-basis 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); width: 320px; flex-shrink: 0; }
         .column-header { font-weight: 800; font-size: 13px; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; color: var(--text-color); position: relative; min-height: 24px; opacity: 0.9; text-transform: uppercase;}
         
-        .column-content { flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; min-height: 200px; padding: 4px; padding-bottom: 30px; margin: -4px; position: relative; }
+        .column-content { flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; min-height: 200px; padding: 4px; padding-bottom: 30px; margin: -4px; }
         
         /* Layout Grid Ratios */
         @media (min-width: 1024px) {
@@ -95,62 +96,38 @@
             body.review-enabled #col-review { display: flex; }
         }
 
-        /* 1. The Factory Conveyor Animation (The "Packages") */
-        .col-loader { width: 120px; height: 16px; position: relative; margin: 15px auto; display: none; z-index: 1; }
-        .col-loader::before { 
-            content: ""; position: absolute; width: 16px; height: 16px; top: 0;
-            background: var(--accent-color); z-index: 5;
-            animation: shape-morph 8s infinite ease-in-out;
-        }
-        .col-loader::after { 
-            content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 4px;
-            transform: translateY(-50%);
-            background: repeating-linear-gradient(90deg, var(--border-color) 0px, var(--border-color) 6px, transparent 6px, transparent 12px);
-            background-size: 24px 100%;
-            animation: conveyor-slide 4s infinite linear;
-            z-index: -1;
-            border-radius: 2px;
-        }
-        @keyframes conveyor-slide {
-            0% { background-position: 0 0; }
-            100% { background-position: 24px 0; }
-        }
-
-        /* Morphing between 4 distinct shapes slowly */
-        @keyframes shape-morph {
-            0% { clip-path: circle(50%); left: 0; }
-            25% { clip-path: polygon(50% 0%, 0% 100%, 100% 100%); left: 33%; }
-            50% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); left: 66%; }
-            75% { clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); left: calc(100% - 16px); }
-            100% { clip-path: circle(50%); left: 0; }
+        /* The Packing/Shipping Loader (In Progress Column Header) */
+        .col-loader { width: 90px; height: 14px; box-shadow: 0 3px 0 var(--text-color); position: absolute; left: 50%; transform: translateX(-50%); display: none; clip-path: inset(-60px 0 -5px); opacity: 0.6; }
+        .col-loader:after { content: ""; position: absolute; inset:0; background: repeating-linear-gradient(90deg, transparent 0 calc(50% - 8px), var(--border-color) 0 calc(50% + 8px), transparent 0 100%) 0 0/calc(100%/3) 100%; animation: l6-1 3s infinite linear; z-index: 1;}
+        .col-loader:before { content: ""; position: absolute; width: 14px; aspect-ratio: 1; left: calc(50% - 7px); bottom: 0; background: var(--accent-color); animation: l6-2 2.5s infinite cubic-bezier(0.2, 0.8, 0.2, 1), shape-shift 10s infinite alternate; z-index: -1;}
+        @keyframes l6-1 { 50%,100% {background-position: calc(100%/2) 0} }
+        @keyframes l6-2 { 0%,50% {transform:translateY(-80px)} }
+        @keyframes shape-shift { 
+            0%, 15% { border-radius: 50%; clip-path: none; } /* Circle */
+            20%, 35% { border-radius: 4px; clip-path: none; } /* Square */
+            40%, 55% { border-radius: 0; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); } /* Triangle */
+            60%, 75% { border-radius: 0; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); } /* Pentagon */
+            80%, 100% { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); } /* Star */
         }
 
         /* Sticky Notes */
         .note { background: var(--note-bg); border-radius: 12px; padding: 14px; box-shadow: var(--shadow); cursor: pointer; border: 1px solid var(--border-color); position: relative; transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s, outline 0.1s; display: flex; flex-direction: column; gap: 8px; z-index: 1; transform-origin: center; }
         
         .note:hover, .note.hover-focus { transform: scale(1.02); box-shadow: 0 16px 32px rgba(0,0,0,0.15); z-index: 50; }
-        .note.dragging { opacity: 0.4; transform: scale(0.95) rotate(var(--rot, 0deg)); z-index: 100; box-shadow: 0 24px 48px rgba(0,0,0,0.3); pointer-events: none; }
+        .note.dragging { opacity: 0.6; transform: scale(0.95) rotate(var(--rot, 0deg)); z-index: 100; box-shadow: 0 24px 48px rgba(0,0,0,0.3); pointer-events: none; }
         
         /* Drop Target Spacer */
-        .drop-spacer { 
-            height: 80px; 
-            border: 2px dashed var(--accent-color); 
-            border-radius: 12px; 
-            margin: 4px 0; 
-            transition: all 0.15s ease; 
-            background: rgba(10, 132, 255, 0.05); 
-            pointer-events: none; 
-        }
+        .drop-spacer { height: 4px; background: var(--accent-color); border-radius: 2px; margin: 4px 0; transition: all 0.2s; opacity: 0; }
         
-        .note-header { display: flex; justify-content: space-between; align-items: flex-start; padding-left: 18px; }
-        .note-subject { font-weight: 700; font-size: 14px; word-break: break-word; outline: none; border-radius: 4px; transition: background 0.2s; padding: 2px 4px; margin: -2px -4px; width: 100%; }
+        .note-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .note-subject { font-weight: 700; font-size: 14px; word-break: break-word; outline: none; border-radius: 4px; transition: background 0.2s; padding: 2px 4px; margin: -2px -4px; }
         .note-desc { font-size: 12px; opacity: 0.8; word-break: break-word; outline: none; border-radius: 4px; transition: background 0.2s; padding: 2px 4px; margin: -2px -4px; }
         
         .note-desc.empty-desc { opacity: 0.4; font-style: italic; min-height: 20px; }
         .note-subject.editing, .note-desc.editing { background: rgba(128,128,128,0.15); box-shadow: inset 0 0 0 1px var(--accent-color); cursor: text; font-style: normal; opacity: 1; }
         .note-desc:not(.editing) { max-height: 60px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
         
-        .note-meta { display: flex; justify-content: space-between; align-items: flex-end; font-size: 11px; margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--border-color); position: relative; min-height: 28px;}
+        .note-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--border-color); position: relative; min-height: 28px;}
         .note-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
         .tag { background: rgba(128,128,128,0.15); padding: 3px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         
@@ -164,11 +141,11 @@
         .progress-mask { position: absolute; inset: 0; -webkit-mask: radial-gradient(circle closest-side, #000 90%, #0000) 0 0/var(--dot-size, 20%) 100%, linear-gradient(#000 0 0) center/calc(100% - 6px) 100% no-repeat; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); background-size: 200% 100%; animation: p-shimmer 2s infinite linear; pointer-events: none; }
         @keyframes p-shimmer { 0% {background-position: 200% 0;} 100% {background-position: -200% 0;} }
 
-        /* Quick Move Hover Button - Top Left, layered above background */
+        /* Quick Move Hover Button - Perfectly overlays the spinner */
         .quick-move-btn { 
             position: absolute; 
-            left: 8px; 
-            top: 8px; 
+            right: 10px; 
+            bottom: 10px; 
             width: 24px; 
             height: 24px; 
             border-radius: 50%; 
@@ -178,60 +155,37 @@
             justify-content: center; 
             align-items: center; 
             font-weight: bold; 
-            font-size: 12px; 
-            box-shadow: none;
+            font-size: 14px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
             z-index: 60; 
             border: 2px solid var(--note-bg); 
-            transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1); 
+            transition: transform 0.1s; 
         }
-        .quick-move-btn:hover { transform: scale(1.15); filter: brightness(1.1); }
+        .quick-move-btn:hover { transform: scale(1.15); }
         .note:hover .quick-move-btn { display: flex; }
 
-        /* 2. Priority Spinners (Bottom-Right) */
-        .priority-spinner { 
-            position: absolute; bottom: 8px; right: 8px; width: 14px; height: 14px; 
-            border-radius: 50%; border: 2px solid transparent; 
-        }
-        .spinner-urgent { border-top-color: var(--urgent-color); animation: spin 0.5s linear infinite; border-width: 3px; }
-        .spinner-default { border-top-color: var(--accent-color); animation: spin 1s linear infinite; }
-        .spinner-low { border-top-color: var(--text-color); animation: spin 2s linear infinite; opacity: 0.6; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        /* Status Animations (Mini Loaders) */
+        .mini-loader { position: relative; width: 14px; aspect-ratio: 1; display: none; flex-shrink: 0; margin-left: auto; }
+        
+        .l-urgent { --_g: no-repeat radial-gradient(farthest-side, currentColor 94%, #0000); background: var(--_g) 0 0, var(--_g) 100% 0, var(--_g) 100% 100%, var(--_g) 0 100%; background-size: 40% 40%; animation: l38 0.5s infinite; color: var(--urgent-color); }
+        @keyframes l38 { 100% {background-position: 100% 0, 100% 100%, 0 100%, 0 0} }
+
+        .l-default { width: 16px; aspect-ratio: 1.154; --_g: no-repeat radial-gradient(farthest-side, currentColor 90%, #0000); background: var(--_g) 50% 0, var(--_g) 0 100%, var(--_g) 100% 100%; background-size: 35% calc(35%*1.154); animation: l16 1s infinite; color: var(--accent-color); }
+        @keyframes l16 { 50%,100% {background-position: 100% 100%, 50% 0, 0 100%} }
+        
+        .l-low { width: 16px; aspect-ratio: 1.154; --_g: no-repeat radial-gradient(farthest-side, currentColor 90%, #0000); background: var(--_g) 50% 0, var(--_g) 0 100%, var(--_g) 100% 100%; background-size: 35% calc(35%*1.154); animation: l16 2s infinite; color: var(--text-color); opacity: 0.6; }
 
         /* Floating Chat */
         #chat-fab { position: fixed; bottom: max(25px, env(safe-area-inset-bottom)); right: 25px; width: 56px; height: 56px; border-radius: 50%; background: var(--accent-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 10px 24px rgba(10, 132, 255, 0.4); cursor: pointer; z-index: 200; transition: transform 0.2s; border: none; }
         #chat-fab:hover { transform: scale(1.1); }
         #chat-badge { position: absolute; top: 0; right: 0; width: 16px; height: 16px; background: var(--urgent-color); border-radius: 50%; display: none; border: 2px solid var(--bg-color); }
         
-        #chat-panel { 
-            position: fixed; 
-            right: 25px; 
-            bottom: calc(max(25px, env(safe-area-inset-bottom)) + 70px); 
-            width: 320px; 
-            height: 420px; 
-            background: var(--note-bg); 
-            border-radius: 16px; 
-            border: 1px solid var(--border-color); 
-            box-shadow: var(--shadow); 
-            backdrop-filter: var(--glass-blur); 
-            -webkit-backdrop-filter: var(--glass-blur); 
-            display: flex; 
-            flex-direction: column; 
-            z-index: 190; 
-            transform: scale(0.9); 
-            opacity: 0; 
-            pointer-events: none; 
-            transition: var(--transition); 
-            transform-origin: bottom right; 
-        }
-        #chat-panel.open { 
-            transform: scale(1); 
-            opacity: 1; 
-            pointer-events: auto !important; 
-        }
+        #chat-panel { position: fixed; right: 25px; bottom: calc(max(25px, env(safe-area-inset-bottom)) + 70px); width: 320px; height: 420px; background: var(--note-bg); border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); display: flex; flex-direction: column; z-index: 190; transform: scale(0.9); opacity: 0; pointer-events: none; transition: var(--transition); transform-origin: bottom right; }
+        #chat-panel.open { transform: scale(1); opacity: 1; pointer-events: auto; }
         #chat-messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
         .chat-msg { background: var(--col-bg); padding: 10px 14px; border-radius: 14px; border: 1px solid var(--border-color); width: fit-content; max-width: 85%; }
         .chat-msg.self { align-self: flex-end; background: var(--accent-color); color: white; border: none; }
-        .chat-msg span.time { font-size: 9px; opacity: 0.6; display: block; margin-top: 4px; text-align: right; }
+        .chat-msg span.time { font-size: 9px; opacity: 0.6; display: block; margin-top: 4px; }
         #chat-input-area { padding: 12px; display: flex; gap: 8px; border-top: 1px solid var(--border-color); }
         #chat-input { flex: 1; border-radius: 20px; padding: 10px 16px; }
 
@@ -276,13 +230,15 @@
     <div id="top-bar">
         <div class="top-group" style="background: transparent; border: none; box-shadow: none;">
             <div class="brand-logo">Trodo</div>
-            <div class="top-group">
-                <input type="text" id="peer-id-input" placeholder="Join ID..." style="width: 100px; padding: 6px; font-size: 12px;">
-                <button onclick="app.connectToPeer()" style="padding: 6px 10px;">Join</button>
-                <div style="border-left: 1px solid var(--border-color); height: 16px; margin: 0 2px;"></div>
-                <span class="id-display" onclick="app.editMyId()" title="Change Session ID" id="my-peer-id">...</span>
-                <button onclick="app.showQR()" style="background: transparent; border: none; box-shadow: none; padding:4px;" title="Share Link">🔗</button>
-            </div>
+        </div>
+
+        <!-- Centered Join UI -->
+        <div class="top-group top-center">
+            <input type="text" id="peer-id-input" placeholder="Join ID..." style="width: 100px; padding: 6px; font-size: 12px;" oninput="app.toggleJoinBtn()">
+            <button id="join-btn" onclick="app.connectToPeer()" style="padding: 6px 10px; display: none;">Join</button>
+            <div style="border-left: 1px solid var(--border-color); height: 16px; margin: 0 2px;"></div>
+            <span class="id-display" onclick="app.editMyId()" title="Change Session ID" id="my-peer-id">...</span>
+            <button onclick="app.showQR()" style="background: transparent; border: none; box-shadow: none; padding:4px;" title="Share Link">🔗</button>
         </div>
 
         <div class="top-group" style="background: transparent; border: none; box-shadow: none; padding:0;">
@@ -477,6 +433,7 @@ const app = {
     isPanning: false, startX: 0, startY: 0,
     hoveredNoteId: null, ctxNoteId: null,
     unreadChat: 0, selectedColor: '',
+    isTabActive: true, hasUnseenChanges: false,
 
     init: async function() {
         this.loadState();
@@ -488,7 +445,18 @@ const app = {
         this.renderAll();
         setInterval(() => this.updateProgressUI(), 1000);
 
-        // Context Menu Cleanup: Explicitly close context menu if click target is not .note or menu itself
+        // Favicon Visibility Tracking
+        window.addEventListener('focus', () => { 
+            this.isTabActive = true; 
+            this.hasUnseenChanges = false; 
+            this.updateFavicon(); 
+        });
+        window.addEventListener('blur', () => { 
+            this.isTabActive = false; 
+        });
+        this.updateFavicon();
+
+        // Context Menu Cleanup
         window.addEventListener('mousedown', (e) => {
             const menu = document.getElementById('context-menu');
             if (menu && menu.style.display === 'flex') {
@@ -502,15 +470,31 @@ const app = {
         this.initPeer(urlParams.get('myid'), urlParams.get('room'));
     },
 
+    updateFavicon: function() {
+        const color = this.hasUnseenChanges ? '#ff9a44' : '#34c759';
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="${color}"/></svg>`;
+        const url = `data:image/svg+xml;base64,${btoa(svg)}`;
+        let link = document.querySelector("link[rel~='icon']");
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.head.appendChild(link);
+        }
+        link.href = url;
+    },
+
+    toggleJoinBtn: function() {
+        const input = document.getElementById('peer-id-input');
+        const btn = document.getElementById('join-btn');
+        btn.style.display = input.value.trim().length > 0 ? 'block' : 'none';
+    },
+
     setupChatEvents: function() {
         const input = document.getElementById('chat-input');
         const btn = document.getElementById('chat-send-btn');
         const panel = document.getElementById('chat-panel');
 
-        // Prevent board pan-zoom from capturing clicks/drags inside the chat panel
-        panel.addEventListener('mousedown', (e) => {
-            e.stopPropagation();
-        });
+        panel.addEventListener('mousedown', (e) => e.stopPropagation());
 
         input.addEventListener('keydown', (e) => {
             e.stopPropagation();
@@ -519,9 +503,7 @@ const app = {
                 this.sendChat();
             }
         });
-        input.addEventListener('mousedown', (e) => {
-            e.stopPropagation();
-        });
+        input.addEventListener('mousedown', (e) => e.stopPropagation());
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             this.sendChat();
@@ -620,16 +602,29 @@ const app = {
     setupShortcuts: function() {
         document.addEventListener('keydown', (e) => {
             if(e.target.isContentEditable && e.key === 'Enter') { e.target.blur(); return; }
-            if(['INPUT', 'TEXTAREA'].includes(e.target.tagName) && e.key !== 'Escape' && e.key !== 'Enter') return;
+            
+            // Handle Enter key for Modals/Dialogs
+            if (e.key === 'Enter') {
+                const dialog = document.getElementById('dialog-overlay');
+                if (dialog.classList.contains('active')) {
+                    document.getElementById('dialog-ok').click();
+                    e.preventDefault();
+                    return;
+                }
+                const modal = document.getElementById('modal-overlay');
+                if (modal.classList.contains('active') && e.target.tagName !== 'TEXTAREA') {
+                    this.saveNote();
+                    e.preventDefault();
+                    return;
+                }
+            }
+
+            if(['INPUT', 'TEXTAREA'].includes(e.target.tagName) && e.key !== 'Escape') return;
 
             if (e.key === 'Escape') {
                 this.closeModal();
                 document.getElementById('context-menu').style.display = 'none';
                 document.getElementById('chat-panel').classList.remove('open');
-            }
-            
-            if (e.key === 'Enter' && document.getElementById('modal-overlay').classList.contains('active') && e.target.tagName !== 'TEXTAREA') {
-                this.saveNote();
             }
 
             if (this.hoveredNoteId && !e.target.isContentEditable && !['INPUT','TEXTAREA'].includes(e.target.tagName)) {
@@ -697,10 +692,16 @@ const app = {
         if (!peerId || peerId === this.myId) return;
         this.setupConnection(this.peer.connect(peerId));
         document.getElementById('peer-id-input').value = '';
+        this.toggleJoinBtn();
     },
     broadcast: function(payload) { Object.values(this.connections).forEach(conn => { if (conn.open) conn.send(payload); }); },
 
     handleNetworkData: function(data, senderId) {
+        if (!this.isTabActive) {
+            this.hasUnseenChanges = true;
+            this.updateFavicon();
+        }
+
         if (data.type === 'FULL_STATE') {
             for (const id in data.state.notes) {
                 const rem = data.state.notes[id], loc = this.state.notes[id];
@@ -827,8 +828,8 @@ const app = {
                 actionHtml = `<button onclick="app.togglePause('${note.id}', event)" style="padding:4px 8px; font-size:10px; border-radius:4px; margin-right:6px; box-shadow:none;">${note.isPaused ? '▶ Play' : '⏸ Pause'}</button>`;
                 
                 if(!note.isPaused) {
-                    const sClass = note.priority === 'urgent' ? 'spinner-urgent' : (note.priority === 'low' ? 'spinner-low' : 'spinner-default');
-                    spinnerHtml = `<div class="priority-spinner ${sClass}"></div>`;
+                    const lClass = note.priority === 'urgent' ? 'l-urgent' : (note.priority === 'low' ? 'l-low' : 'l-default');
+                    spinnerHtml = `<div class="mini-loader ${lClass}" style="display:block;"></div>`;
                 }
 
                 if(note.assumedTimeSpan) {
@@ -980,7 +981,6 @@ const app = {
             const el = e.target.closest('.note');
             if (el && !e.target.isContentEditable) { 
                 draggedId = el.dataset.id; 
-                // Apply random rotate variable via CSS custom properties before drag starts
                 const randomRot = (Math.random() - 0.5) * 6;
                 el.style.setProperty('--rot', `${randomRot}deg`); 
                 el.classList.add('dragging');
@@ -1002,7 +1002,6 @@ const app = {
                 const draggingEl = document.querySelector('.dragging');
                 if(!draggingEl) return;
                 
-                // Get or create drop spacer
                 let spacer = col.querySelector('.drop-spacer');
                 if (!spacer) {
                     document.querySelectorAll('.drop-spacer').forEach(s => s.remove());
