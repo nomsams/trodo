@@ -102,25 +102,24 @@
             content: ""; position: absolute; inset:0; 
             background: repeating-linear-gradient(90deg, transparent 0 4px, var(--border-color) 4px 26px, transparent 26px 30px); 
             background-size: 30px 100%; 
-            animation: conveyor 1.5s infinite linear; 
+            animation: conveyor 2s infinite linear; 
             z-index: 1;
         }
         .col-loader:before { 
             content: ""; position: absolute; width: 12px; height: 12px; left: calc(50% - 6px); bottom: 2px; 
             background: var(--accent-color);
-            animation: drop 1.5s infinite linear, shape-shift 7.5s infinite steps(1), color-shift 7.5s infinite steps(1); 
+            animation: drop 2s infinite linear, shape-shift 10s infinite steps(1), color-shift 10s infinite steps(1); 
             z-index: 2;
         }
         @keyframes conveyor {
-            0% { background-position: 0 0; }
-            20%, 60% { background-position: 15px 0; } /* Box stops in the middle */
-            80%, 100% { background-position: 30px 0; } /* Box moves away */
+            0%, 20% { background-position: -30px 0; }
+            40%, 80% { background-position: 0 0; } /* Box stops perfectly in the middle */
+            100% { background-position: 30px 0; }
         }
         @keyframes drop {
-            0%, 10% { transform: translateY(-20px); opacity: 0; }
-            30% { transform: translateY(0); opacity: 1; } /* Shape hits the box while it's stopped */
-            60% { transform: translateY(0); opacity: 1; } /* Shape stays in the box */
-            70%, 100% { transform: translateY(0); opacity: 0; } /* Shape disappears as box moves away */
+            0%, 30% { transform: translateY(-20px); opacity: 0; }
+            40%, 80% { transform: translateY(0); opacity: 1; } /* Shape drops into the stopped box */
+            85%, 100% { transform: translateY(0); opacity: 0; }
         }
         @keyframes shape-shift { 
             0%, 20% { border-radius: 50%; clip-path: none; } /* Circle */
@@ -176,7 +175,7 @@
         .progress-mask { position: absolute; inset: 0; -webkit-mask: radial-gradient(circle closest-side, #000 90%, #0000) 0 0/var(--dot-size, 20%) 100%, linear-gradient(#000 0 0) center/calc(100% - 6px) 100% no-repeat; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); background-size: 200% 100%; animation: p-shimmer 2s infinite linear; pointer-events: none; }
         @keyframes p-shimmer { 0% {background-position: 200% 0;} 100% {background-position: -200% 0;} }
 
-        /* Quick Move Hover Button - Perfect Circle, Overlays Spinner */
+        /* Quick Move Hover Button - Perfect Circle, Overlays Spinner, No Border */
         .quick-move-btn { 
             position: absolute; 
             right: 10px; 
@@ -197,7 +196,7 @@
             line-height: 1;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
             z-index: 60; 
-            border: 2px solid var(--note-bg); 
+            border: none; 
             transition: transform 0.1s; 
             flex-shrink: 0;
         }
@@ -238,13 +237,19 @@
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 500; opacity: 0; transition: opacity 0.2s; }
         .overlay.active { display: flex; opacity: 1; }
         
-        .modal { background: var(--bg-color); padding: 24px; border-radius: 20px; width: 440px; max-width: 92%; box-shadow: 0 32px 64px rgba(0,0,0,0.4); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 16px; }
+        .modal { background: var(--bg-color); padding: 24px; border-radius: 20px; width: 440px; max-width: 92%; box-shadow: 0 32px 64px rgba(0,0,0,0.4); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 16px; max-height: 90vh; overflow-y: auto; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
         .form-group.full { grid-column: 1 / -1; }
         .form-group label { font-size: 11px; font-weight: 700; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
         
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; grid-column: 1 / -1; border-top: 1px solid var(--border-color); padding-top: 16px;}
+
+        /* History Log in Modal */
+        .history-log { display: flex; flex-direction: column; gap: 6px; max-height: 120px; overflow-y: auto; font-size: 11px; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px; margin-top: 4px; border: 1px solid var(--border-color); }
+        [data-theme="dark"] .history-log { background: rgba(255,255,255,0.03); }
+        .history-entry { display: flex; justify-content: space-between; opacity: 0.85; }
+        .history-entry .time { opacity: 0.6; font-size: 10px; }
 
         /* Custom Toast */
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 1000; pointer-events: none; }
@@ -440,6 +445,11 @@
                         Estimate (Hrs)
                     </label>
                     <input type="number" id="note-time" value="1" min="0.1" step="0.1" disabled placeholder="e.g. 1.5">
+                </div>
+
+                <div class="form-group full" id="history-container" style="display:none;">
+                    <label>Task History</label>
+                    <div id="note-history-log" class="history-log"></div>
                 </div>
 
                 <div class="modal-actions">
@@ -753,8 +763,10 @@ const app = {
                 const rem = data.state.notes[id], loc = this.state.notes[id];
                 if (!loc || rem.timestamps.lastModified > loc.timestamps.lastModified) this.state.notes[id] = rem;
             }
-            if(data.state.settings && data.state.settings.reviewEnabled !== this.state.settings.reviewEnabled) {
-                this.toggleReviewColumn(data.state.settings.reviewEnabled, false);
+            if(data.state.settings) {
+                this.state.settings = data.state.settings;
+                document.getElementById('toggle-review').checked = this.state.settings.reviewEnabled;
+                this.toggleReviewColumn(this.state.settings.reviewEnabled, false);
             }
             this.state.users = { ...this.state.users, ...data.state.users };
             const allChat = [...this.state.chat, ...data.state.chat];
@@ -1006,6 +1018,9 @@ const app = {
         duplicate.timestamps.created = Date.now();
         duplicate.timestamps.lastModified = Date.now();
         duplicate.orderIndex = (original.orderIndex || 0) - 1;
+        
+        if (!duplicate.history) duplicate.history = [];
+        duplicate.history.push({ action: 'Duplicated', user: this.myId, time: Date.now() });
 
         if (duplicate.status === 'in-progress') {
             duplicate.accumulatedProgressTime = 0;
@@ -1105,55 +1120,69 @@ const app = {
                 const note = this.state.notes[draggedId];
                 const newStatus = col.dataset.status;
                 
-                const children = Array.from(col.children).filter(c => c.classList.contains('note') || c.classList.contains('drop-spacer'));
-                const spacerIndex = children.findIndex(c => c.classList.contains('drop-spacer') || c.id === `note-${draggedId}`);
+                // Calculate new visual order
+                const currentVisualNotes = Array.from(col.querySelectorAll('.note:not(.dragging)')).map(n => n.dataset.id);
+                const layoutElements = Array.from(col.querySelectorAll('.note:not(.dragging), .drop-spacer'));
+                const insertIndex = layoutElements.findIndex(el => el.classList.contains('drop-spacer'));
                 
-                if(newStatus !== note.status) this.moveNoteNetwork(note, newStatus, false);
+                if (insertIndex !== -1) currentVisualNotes.splice(insertIndex, 0, draggedId);
+                else currentVisualNotes.push(draggedId);
                 
-                const notesInCol = Array.from(col.querySelectorAll('.note')).filter(n => n.dataset.id !== draggedId);
-                if (spacerIndex !== -1) {
-                    notesInCol.splice(spacerIndex, 0, document.getElementById(`note-${draggedId}`));
-                }
-                
-                notesInCol.forEach((noteEl, index) => {
-                    if (noteEl) {
-                        const n = this.state.notes[noteEl.dataset.id];
-                        if (n) n.orderIndex = notesInCol.length - index;
-                    }
-                });
-                
-                note.timestamps.lastModified = Date.now();
-                this.saveState(); this.renderNotes();
-                this.broadcast({ type: 'NOTE_UPDATE', note });
+                this.moveNoteNetwork(note, newStatus, currentVisualNotes);
             });
         });
     },
 
-    moveNoteNetwork: function(note, newStatus, doReorder = true) {
+    moveNoteNetwork: function(note, newStatus, newOrderArray = null) {
         const oldStatus = note.status;
-        if (newStatus === oldStatus && doReorder) return;
+        
+        const proceedWithDrop = () => {
+            // Apply new order if provided
+            if (newOrderArray) {
+                const total = newOrderArray.length;
+                newOrderArray.forEach((id, idx) => {
+                    if(this.state.notes[id]) this.state.notes[id].orderIndex = total - idx;
+                });
+            }
 
-        const updateState = () => {
+            if (!note.history) note.history = [];
+
             if (oldStatus === 'in-progress') {
                 if (!note.isPaused && note.assumedTimeSpan) note.accumulatedProgressTime += (Date.now() - note.timestamps.inProgress);
                 note.isPaused = false;
             }
-            if (newStatus === 'in-progress') { note.assignedUser = this.myId; note.timestamps.inProgress = Date.now(); note.isPaused = false; }
-            if (newStatus === 'done') note.timestamps.completed = Date.now();
+            if (newStatus === 'in-progress' && oldStatus !== 'in-progress') { 
+                note.assignedUser = this.myId; 
+                note.timestamps.inProgress = Date.now(); 
+                note.isPaused = false; 
+                note.history.push({ action: 'Moved to In Progress', user: this.myId, time: Date.now() });
+            }
+            if (newStatus === 'done' && oldStatus !== 'done') { 
+                note.timestamps.completed = Date.now(); 
+                note.history.push({ action: 'Completed', user: this.myId, time: Date.now() });
+            }
+            if (newStatus === 'review' && oldStatus !== 'review') {
+                note.history.push({ action: 'Moved to Review', user: this.myId, time: Date.now() });
+            }
+            if (newStatus === 'todo' && oldStatus !== 'todo') {
+                note.history.push({ action: 'Moved to TODO', user: this.myId, time: Date.now() });
+            }
 
             note.status = newStatus;
             note.timestamps.lastModified = Date.now();
             this.saveState(); this.renderNotes();
-            this.broadcast({ type: 'NOTE_UPDATE', note });
+            this.broadcast({ type: 'FULL_STATE', state: this.state }); // Broadcast full state to sync order perfectly
         };
 
-        if ((oldStatus === 'done' && newStatus !== 'done') || (oldStatus === 'review' && newStatus === 'in-progress') || (oldStatus === 'in-progress' && newStatus === 'todo')) {
+        if (newStatus !== oldStatus && ((oldStatus === 'done' && newStatus !== 'done') || (oldStatus === 'review' && newStatus === 'in-progress') || (oldStatus === 'in-progress' && newStatus === 'todo'))) {
             this.confirm(`Revert task from ${oldStatus.toUpperCase()} to ${newStatus.toUpperCase()}?`, () => {
                 note.timestamps.reverted = Date.now();
-                updateState();
+                if (!note.history) note.history = [];
+                note.history.push({ action: `Reverted to ${newStatus.toUpperCase()}`, user: this.myId, time: Date.now() });
+                proceedWithDrop();
             });
         } else {
-            updateState();
+            proceedWithDrop();
         }
     },
 
@@ -1182,22 +1211,37 @@ const app = {
     openNoteModal: function(noteId = null) {
         const modal = document.getElementById('modal-overlay');
         const isEditing = noteId && this.state.notes[noteId];
+        const note = isEditing ? this.state.notes[noteId] : null;
         
         document.getElementById('modal-title').innerText = isEditing ? 'Edit Card' : 'New Card';
         document.getElementById('note-id').value = isEditing ? noteId : '';
-        document.getElementById('note-subject').value = isEditing ? this.state.notes[noteId].subject : '';
-        document.getElementById('note-desc').value = isEditing ? (this.state.notes[noteId].desc||'') : '';
-        document.getElementById('note-priority').value = isEditing ? this.state.notes[noteId].priority : 'default';
+        document.getElementById('note-subject').value = isEditing ? note.subject : '';
+        document.getElementById('note-desc').value = isEditing ? (note.desc||'') : '';
+        document.getElementById('note-priority').value = isEditing ? note.priority : 'default';
         
-        const hasTime = isEditing && this.state.notes[noteId].assumedTimeSpan > 0;
+        const hasTime = isEditing && note.assumedTimeSpan > 0;
         document.getElementById('enable-time').checked = hasTime;
         document.getElementById('note-time').disabled = !hasTime;
-        document.getElementById('note-time').value = hasTime ? (this.state.notes[noteId].assumedTimeSpan / 3600000) : '';
+        document.getElementById('note-time').value = hasTime ? (note.assumedTimeSpan / 3600000) : '';
         
-        const tags = isEditing ? (this.state.notes[noteId].tags||[]) : [];
+        const tags = isEditing ? (note.tags||[]) : [];
         Array.from(document.getElementById('note-tags').options).forEach(opt => opt.selected = tags.includes(opt.value));
 
-        this.selectColor(null, isEditing ? (this.state.notes[noteId].color||'') : '');
+        this.selectColor(null, isEditing ? (note.color||'') : '');
+
+        // Render History Log
+        const historyContainer = document.getElementById('history-container');
+        const historyLog = document.getElementById('note-history-log');
+        if (isEditing && note.history && note.history.length > 0) {
+            historyLog.innerHTML = note.history.map(h => {
+                const uName = this.localNicknames[h.user] || (this.state.users[h.user] ? this.state.users[h.user].name : 'Unknown');
+                const timeStr = new Date(h.time).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+                return `<div class="history-entry"><span>${h.action} by <b>${uName}</b></span> <span class="time">${timeStr}</span></div>`;
+            }).reverse().join('');
+            historyContainer.style.display = 'flex';
+        } else {
+            historyContainer.style.display = 'none';
+        }
 
         modal.style.display = 'flex';
         void modal.offsetWidth; 
@@ -1241,6 +1285,7 @@ const app = {
             accumulatedProgressTime: isNew ? 0 : this.state.notes[id].accumulatedProgressTime,
             isPaused: isNew ? false : this.state.notes[id].isPaused,
             orderIndex: isNew ? 0 : (this.state.notes[id].orderIndex||0),
+            history: isNew ? [{ action: 'Created', user: this.myId, time: Date.now() }] : (this.state.notes[id].history || []),
             timestamps: isNew ? { created: Date.now(), inProgress: null, completed: null, lastModified: Date.now() } 
                               : { ...this.state.notes[id].timestamps, lastModified: Date.now() }
         };
