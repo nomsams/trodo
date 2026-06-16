@@ -34,7 +34,6 @@
 
         * { 
             box-sizing: border-box; margin: 0; padding: 0; 
-            /* Firefox Scrollbars */
             scrollbar-width: thin; 
             scrollbar-color: var(--border-color) transparent;
         }
@@ -49,7 +48,6 @@
         input, select, textarea { background: var(--col-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 13px; outline: none; transition: border-color 0.2s; }
         input:focus, select:focus, textarea:focus { border-color: var(--accent-color); }
         
-        /* Webkit Scrollbars (Chrome/Safari/Edge) */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
@@ -59,13 +57,11 @@
         #top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: transparent; z-index: 100; position: absolute; top:0; left:0; right:0; padding-top: max(15px, env(safe-area-inset-top)); pointer-events: none; }
         .top-group { display: flex; align-items: center; gap: 10px; background: var(--col-bg); padding: 6px 12px; border-radius: 14px; backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--border-color); box-shadow: var(--shadow); pointer-events: auto; }
         .top-center { position: absolute; left: 50%; transform: translateX(-50%); }
-        @media (max-width: 768px) { .top-center { position: static; transform: none; } }
         
-        /* Premium Trodo Logo */
         .brand-logo { font-size: 24px; font-weight: 900; background: linear-gradient(135deg, #FF2A54, #FF9A44, #b266ff); background-size: 200% 200%; animation: gradient-shift 4s ease infinite; -webkit-background-clip: text; color: transparent; letter-spacing: -1.5px; margin-right: 8px; transform: skewX(-6deg); filter: drop-shadow(0 2px 4px rgba(255,42,84,0.3)); cursor: default; user-select: none; }
         @keyframes gradient-shift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
 
-        .id-display { font-size: 12px; opacity: 0.8; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: background 0.2s; font-family: monospace; border: 1px dashed transparent; font-weight: 600; }
+        .id-display { font-size: 12px; opacity: 0.8; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: background 0.2s; font-family: monospace; border: 1px dashed transparent; font-weight: 600; display: flex; align-items: center; gap: 5px; }
         .id-display:hover { background: rgba(128,128,128,0.2); border-color: var(--border-color); }
 
         #users-container { display: flex; gap: -5px; align-items: center; margin-left: 5px; padding-left: 10px; border-left: 1px solid var(--border-color); }
@@ -82,10 +78,9 @@
         /* Columns */
         .column { background: var(--col-bg); border-radius: 18px; display: flex; flex-direction: column; padding: 18px; gap: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); transition: flex-basis 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); width: 320px; flex-shrink: 0; }
         .column-header { font-weight: 800; font-size: 13px; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; color: var(--text-color); position: relative; min-height: 24px; opacity: 0.9; text-transform: uppercase;}
-        
         .column-content { flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; min-height: 200px; padding: 4px; padding-bottom: 30px; margin: -4px; }
         
-        /* Layout Grid Ratios */
+        /* Layout Grid Ratios (Desktop) */
         @media (min-width: 1024px) {
             .column { width: auto; flex-shrink: 1; }
             #col-todo, #col-done { flex: 1 1 25%; }
@@ -96,6 +91,20 @@
             body.review-enabled #col-review { display: flex; }
         }
 
+        /* Mobile Layout Overhaul */
+        @media (max-width: 1023px) {
+            #top-bar { flex-wrap: wrap; gap: 10px; padding: 10px; position: static; pointer-events: auto; }
+            .top-center { position: static; transform: none; width: 100%; justify-content: center; }
+            #board-container { margin-top: 0; overflow-y: auto; overflow-x: hidden; cursor: default; }
+            #canvas-wrapper { flex-direction: column; width: 100%; padding: 10px; gap: 15px; transform: none !important; height: auto; }
+            .column { width: 100%; min-height: 300px; }
+            .col-loader { display: none !important; }
+            #col-review { display: none; }
+            body.review-enabled #col-review { display: flex; }
+            #chat-panel { width: 100%; height: 100%; bottom: 0; right: 0; border-radius: 0; }
+            .chat-close-btn { font-size: 20px !important; padding: 10px !important; }
+        }
+
         /* Archive Buttons */
         .archive-btn { display: none; font-size: 10px; padding: 4px 8px; background: transparent; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); cursor: pointer; }
         .archive-btn:hover { background: var(--accent-color); color: white; border-color: var(--accent-color); }
@@ -104,7 +113,7 @@
         .view-archive-btn { font-size: 11px; padding: 6px 8px; background: transparent; border: none; color: var(--text-color); opacity: 0.5; cursor: pointer; text-align: left; margin-top: auto; transition: opacity 0.2s; display: inline-block; width: fit-content; }
         .view-archive-btn:hover { opacity: 1; text-decoration: underline; }
 
-        /* Perfectly Synced Factory Conveyor Animation (Half Speed, Z-Index fixed) */
+        /* Perfectly Synced Factory Conveyor Animation */
         .col-loader { width: 90px; height: 16px; position: absolute; left: 50%; transform: translateX(-50%); display: none; opacity: 0.95; overflow: hidden; border-bottom: 2px solid var(--border-color); }
         .col-loader:after { 
             content: ""; position: absolute; inset:0; 
@@ -121,14 +130,14 @@
         }
         @keyframes conveyor {
             0%, 15% { background-position: -30px 0; }
-            30%, 70% { background-position: 0 0; } /* Box stops perfectly in the middle */
+            25%, 75% { background-position: 0 0; } /* Box stops perfectly in the middle */
             85%, 100% { background-position: 30px 0; }
         }
         @keyframes drop {
-            0%, 20% { transform: translate(0, -40px); opacity: 0; }
-            25% { transform: translate(0, -40px); opacity: 1; }
-            35%, 70% { transform: translate(0, 0); opacity: 1; } /* Shape drops into the stopped box */
-            80%, 100% { transform: translate(30px, 0); opacity: 0; } /* Moves right with the box */
+            0%, 25% { transform: translate(0, -40px); opacity: 0; }
+            30% { transform: translate(0, -40px); opacity: 1; }
+            40%, 75% { transform: translate(0, 0); opacity: 1; } /* Shape drops into the stopped box */
+            85%, 100% { transform: translate(30px, 0); opacity: 0; } /* Moves right with the box */
         }
         @keyframes shape-shift { 
             0%, 20% { border-radius: 50%; clip-path: none; } /* Circle */
@@ -146,7 +155,7 @@
         }
 
         /* Sticky Notes */
-        .note { background: var(--note-bg); border-radius: 12px; padding: 14px; box-shadow: var(--shadow); cursor: pointer; border: 1px solid var(--border-color); position: relative; transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s, outline 0.1s; display: flex; flex-direction: column; gap: 8px; z-index: 1; transform-origin: center; }
+        .note { background: var(--note-bg); border-radius: 12px; padding: 14px; box-shadow: var(--shadow); cursor: pointer; border: 1px solid var(--border-color); position: relative; transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s, outline 0.1s; display: flex; flex-direction: column; gap: 8px; z-index: 1; transform-origin: center; will-change: transform; }
         
         /* Boost color brightness in dark mode */
         [data-theme="dark"] .note[style*="background"] { filter: brightness(1.25) saturate(1.2); }
@@ -154,7 +163,6 @@
         .note:hover, .note.hover-focus { transform: scale(1.02); box-shadow: 0 16px 32px rgba(0,0,0,0.15); z-index: 50; }
         .note.dragging { opacity: 0.6; transform: scale(0.95) rotate(var(--rot, 0deg)); z-index: 100; box-shadow: 0 24px 48px rgba(0,0,0,0.3); pointer-events: none; }
         
-        /* Drop Target Spacer */
         .drop-spacer { height: 4px; background: var(--accent-color); border-radius: 2px; margin: 4px 0; transition: all 0.2s; opacity: 0; }
         
         .note-header { display: flex; justify-content: space-between; align-items: flex-start; }
@@ -271,7 +279,7 @@
         @keyframes confetti-pop { 0% { transform: translate(0,0) rotate(0deg) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) rotate(720deg) scale(0); opacity: 0; } }
         
         /* API Code Block */
-        pre.api-code { background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; overflow-x: auto; margin-top: 5px; border: 1px solid #333; }
+        pre.api-code { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 11px; overflow-x: auto; margin-top: 5px; border: 1px solid #333; max-height: 200px; overflow-y: auto; white-space: pre; }
     </style>
 </head>
 <body>
@@ -286,7 +294,12 @@
             <input type="text" id="peer-id-input" placeholder="Join ID..." style="width: 100px; padding: 6px; font-size: 12px;" oninput="app.toggleJoinBtn()">
             <button id="join-btn" onclick="app.connectToPeer()" style="padding: 6px 10px; display: none;">Join</button>
             <div style="border-left: 1px solid var(--border-color); height: 16px; margin: 0 2px;"></div>
-            <span class="id-display" onclick="app.editMyId()" title="Change Session ID" id="my-peer-id">...</span>
+            
+            <span class="id-display" onclick="app.handleIdClick()" title="Click to reveal/edit" id="my-peer-id-container">
+                <span id="my-peer-id-mask">***</span>
+                <span id="my-peer-id" style="display:none;"></span>
+            </span>
+            
             <button onclick="app.showQR()" style="background: transparent; border: none; box-shadow: none; padding:4px;" title="Share Link">🔗</button>
         </div>
 
@@ -359,7 +372,7 @@
 
     <div id="chat-panel">
         <div style="padding: 15px; font-weight: 700; border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
-            Team Chat <span onclick="app.toggleChat()" style="cursor:pointer; opacity:0.5; font-size:12px; padding:4px;">✕</span>
+            Team Chat <span class="chat-close-btn" onclick="app.toggleChat()" style="cursor:pointer; opacity:0.5; font-size:12px; padding:4px;">✕</span>
         </div>
         <div id="chat-messages"></div>
         <div id="chat-input-area">
@@ -396,7 +409,7 @@
 
     <!-- Guide Modal -->
     <div id="guide-modal" class="overlay" onmousedown="if(event.target===this) this.classList.remove('active'); setTimeout(()=>this.style.display='none',200);">
-        <div class="modal" style="width: 500px; max-height: 85vh; overflow-y: auto;">
+        <div class="modal" style="width: 600px; max-height: 85vh; overflow-y: auto;">
             <h3 style="margin-bottom: 5px;">Trodo Pro Guide</h3>
             <p style="font-size: 13px; opacity: 0.8; line-height: 1.5;">Welcome to Trodo! This is a spatial, real-time Kanban board. Drag the background to pan, and use your mouse wheel to zoom in and out.</p>
             
@@ -409,7 +422,7 @@
             </ul>
 
             <h4 style="margin-top: 15px; font-size: 12px; text-transform: uppercase; opacity: 0.6;">🤖 Robot / Agent API</h4>
-            <p style="font-size: 12px; opacity: 0.8; line-height: 1.4;">Trodo exposes a local API for injected scripts or browser extensions to automate tasks. You must authenticate first.</p>
+            <p style="font-size: 12px; opacity: 0.8; line-height: 1.4;">Since Trodo is a serverless P2P application, bots and LLM agents connect via Browser Automation (e.g., Puppeteer, Selenium) or browser extensions by executing JavaScript directly on the page.</p>
             
             <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
                 <span style="font-size: 12px; font-weight: bold;">Your API Code:</span>
@@ -418,24 +431,46 @@
             </div>
 
             <pre class="api-code">
+// --- BROWSER CONSOLE / EXTENSION USAGE ---
+
 // 1. Authenticate
 TrodoAPI.authenticate('YOUR_API_CODE');
 
-// 2. Get Tasks
+// 2. Read Board State
+const allData = TrodoAPI.getBoardState();
 const todo = TrodoAPI.getTasks('todo');
 const myJobs = TrodoAPI.getAssignedTasks('Robot');
 
 // 3. Move & Update
-TrodoAPI.moveTask(myJobs[0].id, 'in-progress');
-TrodoAPI.updateTask(myJobs[0].id, { desc: 'Processing data...' });
+if(myJobs.length > 0) {
+    TrodoAPI.moveTask(myJobs[0].id, 'in-progress');
+    TrodoAPI.updateTask(myJobs[0].id, { desc: 'Processing data...' });
+    TrodoAPI.assignTask(myJobs[0].id, 'Robot');
+}
 
-// 4. Chat
+// 4. Chat & Management
 TrodoAPI.sendChat('I have started working on the task!');
+TrodoAPI.clearColumn('done'); // Archives all done tasks
 
-// 5. Listen for User Changes
+// 5. Listen for User Changes (Event Listener)
 TrodoAPI.onTaskUpdated((task) => {
     console.log('Task changed by user:', task);
 });
+
+// --- PUPPETEER (NODE.JS) EXAMPLE ---
+/*
+const puppeteer = require('puppeteer');
+(async () => {
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.goto('YOUR_TRODO_URL');
+  
+  await page.evaluate(() => {
+    TrodoAPI.authenticate('YOUR_API_CODE');
+    TrodoAPI.createTask({ subject: 'Automated Task', status: 'todo' });
+  });
+})();
+*/
             </pre>
             <button onclick="navigator.clipboard.writeText(document.querySelector('.api-code').innerText); app.toast('API Code Copied!');" style="font-size: 10px; padding: 4px 8px; margin-top: 4px;">Copy Example</button>
 
@@ -572,6 +607,7 @@ const app = {
     hoveredNoteId: null, ctxNoteId: null, draggedNoteId: null,
     unreadChat: 0, selectedColor: '',
     isTabActive: true, hasUnseenChanges: false,
+    idMaskTimeout: null,
 
     init: async function() {
         this.loadState();
@@ -584,6 +620,8 @@ const app = {
         this.setupChatEvents();
         this.initAPI();
         this.renderAll();
+        
+        // Optimized Progress Loop
         setInterval(() => this.updateProgressUI(), 1000);
 
         // Favicon Visibility Tracking
@@ -624,6 +662,10 @@ const app = {
                 return "Authentication failed.";
             },
             _checkAuth: function() { if(!this._authenticated) throw new Error("Not authenticated. Call TrodoAPI.authenticate('code') first."); },
+            getBoardState: function() {
+                this._checkAuth();
+                return JSON.parse(JSON.stringify(app.state));
+            },
             getTasks: function(column) {
                 this._checkAuth();
                 return Object.values(app.state.notes).filter(n => n.status === column);
@@ -645,6 +687,17 @@ const app = {
                     note.timestamps.lastModified = Date.now();
                     if(!note.history) note.history = [];
                     note.history.push({ action: 'Updated by API', user: 'API', time: Date.now() });
+                    app.saveState(); app.renderNotes(); app.broadcast({type:'NOTE_UPDATE', note});
+                }
+            },
+            assignTask: function(taskId, assignee) {
+                this._checkAuth();
+                const note = app.state.notes[taskId];
+                if(note) {
+                    note.assignedUser = assignee;
+                    note.timestamps.lastModified = Date.now();
+                    if(!note.history) note.history = [];
+                    note.history.push({ action: `Assigned to ${assignee}`, user: 'API', time: Date.now() });
                     app.saveState(); app.renderNotes(); app.broadcast({type:'NOTE_UPDATE', note});
                 }
             },
@@ -672,6 +725,21 @@ const app = {
                 this._checkAuth();
                 app.ctxNoteId = taskId;
                 app.ctxDuplicate();
+            },
+            clearColumn: function(column) {
+                this._checkAuth();
+                let changed = false;
+                Object.values(app.state.notes).forEach(n => {
+                    if(n.status === column) {
+                        if(!app.state.archived) app.state.archived = {};
+                        app.state.archived[n.id] = n;
+                        delete app.state.notes[n.id];
+                        changed = true;
+                    }
+                });
+                if(changed) {
+                    app.saveState(); app.renderNotes(); app.broadcast({type:'FULL_STATE', state: app.state});
+                }
             },
             sendChat: function(message) {
                 this._checkAuth();
@@ -710,6 +778,25 @@ const app = {
         const input = document.getElementById('peer-id-input');
         const btn = document.getElementById('join-btn');
         btn.style.display = input.value.trim().length > 0 ? 'block' : 'none';
+    },
+
+    handleIdClick: function() {
+        const mask = document.getElementById('my-peer-id-mask');
+        const idDisplay = document.getElementById('my-peer-id');
+        
+        if (mask.style.display !== 'none') {
+            // Reveal
+            mask.style.display = 'none';
+            idDisplay.style.display = 'inline';
+            clearTimeout(this.idMaskTimeout);
+            this.idMaskTimeout = setTimeout(() => {
+                mask.style.display = 'inline';
+                idDisplay.style.display = 'none';
+            }, 5000);
+        } else {
+            // Edit
+            this.editMyId();
+        }
     },
 
     setupChatEvents: function() {
@@ -941,7 +1028,10 @@ const app = {
                 }
             }
 
-            if(['INPUT', 'TEXTAREA'].includes(e.target.tagName) && e.key !== 'Escape') return;
+            if(['INPUT', 'TEXTAREA'].includes(e.target.tagName) || e.target.isContentEditable) {
+                if (e.key === 'Escape') e.target.blur();
+                return;
+            }
 
             if (e.key === 'Escape') {
                 this.closeModal();
@@ -953,12 +1043,12 @@ const app = {
                 setTimeout(()=>document.getElementById('archive-modal').style.display='none',200);
             }
 
-            if (e.key.toLowerCase() === 'n' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+            if (e.key.toLowerCase() === 'n') {
                 e.preventDefault();
                 this.openNoteModal();
             }
 
-            if (this.hoveredNoteId && !e.target.isContentEditable && !['INPUT','TEXTAREA'].includes(e.target.tagName)) {
+            if (this.hoveredNoteId) {
                 const note = this.state.notes[this.hoveredNoteId];
                 if(!note) return;
                 
@@ -1171,7 +1261,7 @@ const app = {
                     displayChar = tooltipName.charAt(0).toUpperCase();
                 }
                 
-                userHtml = `<div class="user-avatar" style="width:20px;height:20px;font-size:10px;position:absolute;top:10px;right:10px; border:none; z-index:10;">
+                userHtml = `<div class="user-avatar" style="width:20px;height:20px;font-size:9px;position:absolute;top:10px;right:10px; border:none; z-index:10;">
                     ${displayChar}
                     <div class="tooltip">${tooltipName}</div>
                 </div>`;
@@ -1195,7 +1285,7 @@ const app = {
                     progressHtml = `
                         <div class="progress-wrapper" style="--dot-size: ${dotSize}%">
                             <div class="progress-mask"></div>
-                            <div class="progress-fill" id="prog-${note.id}"></div>
+                            <div class="progress-fill" id="prog-${note.id}" data-val="0"></div>
                         </div>`;
                 }
             }
@@ -1263,7 +1353,7 @@ const app = {
         });
 
         document.getElementById('main-progress-loader').style.display = inProgressCount > 0 ? 'block' : 'none';
-        this.updateProgressUI();
+        this.updateProgressUI(true);
     },
 
     // --- QUICK EDIT LOGIC ---
@@ -1352,6 +1442,7 @@ const app = {
     setupPanZoom: function() {
         const container = document.getElementById('board-container');
         container.addEventListener('wheel', (e) => {
+            if (window.innerWidth < 1024) return; // Disable on mobile
             if (e.ctrlKey || e.metaKey) {
                 e.preventDefault();
                 const zoom = Math.exp((e.deltaY < 0 ? 1 : -1) * 0.08);
@@ -1367,22 +1458,12 @@ const app = {
             this.startY = e.clientY - this.transform.y;
         });
         window.addEventListener('mousemove', (e) => {
-            if (!this.isPanning) return;
+            if (!this.isPanning || window.innerWidth < 1024) return;
             this.transform.x = e.clientX - this.startX;
             this.transform.y = e.clientY - this.startY;
             document.getElementById('canvas-wrapper').style.transform = `translate(${this.transform.x}px, ${this.transform.y}px) scale(${this.transform.scale})`;
         });
         window.addEventListener('mouseup', () => this.isPanning = false);
-    },
-
-    getDragAfterElement: function(container, y) {
-        const draggableElements = [...container.querySelectorAll('.note:not(.dragging)')];
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
-            if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
-            else return closest;
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
     },
 
     setupDragAndDrop: function() {
@@ -1526,14 +1607,19 @@ const app = {
         }
     },
 
-    updateProgressUI: function() {
+    updateProgressUI: function(force = false) {
         Object.values(this.state.notes).forEach(note => {
             if (note.status === 'in-progress' && note.assumedTimeSpan) {
                 let elapsed = note.accumulatedProgressTime;
                 if (!note.isPaused && note.timestamps.inProgress) elapsed += (Date.now() - note.timestamps.inProgress);
-                const percent = Math.min((elapsed / note.assumedTimeSpan) * 100, 100);
+                const percent = Math.min((elapsed / note.assumedTimeSpan) * 100, 100).toFixed(1);
                 const bar = document.getElementById(`prog-${note.id}`);
-                if (bar) bar.style.setProperty('--p', `${percent}%`);
+                if (bar) {
+                    if (force || bar.dataset.val !== percent) {
+                        bar.style.setProperty('--p', `${percent}%`);
+                        bar.dataset.val = percent;
+                    }
+                }
             }
         });
     },
@@ -1689,17 +1775,44 @@ const app = {
         this.saveState(); this.renderChat(); this.broadcast({ type: 'CHAT', msg });
         input.value = '';
     },
+    
     renameSelf: function() {
-        this.promptUser("Profile", "Enter your display name:", this.state.users[this.myId]?.name, val => {
-            if (val && val.trim()) {
-                this.state.users[this.myId].name = val.trim();
-                this.localNicknames[this.myId] = val.trim();
-                localStorage.setItem('kanban_nicks', JSON.stringify(this.localNicknames));
-                this.saveState(); this.renderUsers(); this.renderChat();
-                this.broadcast({ type: 'USER_UPDATE', user: this.state.users[this.myId] });
+        const oldName = this.state.users[this.myId]?.name || '';
+        this.promptUser("Profile", "Enter your display name:", oldName, val => {
+            if (!val || !val.trim() || val.trim() === oldName) return;
+            const newName = val.trim();
+            
+            const exists = Object.values(this.state.users).some(u => u.id !== this.myId && u.name.toLowerCase() === newName.toLowerCase());
+            if (exists) {
+                this.confirm(`The name "${newName}" is already in use. Are you sure you want to use it?`, () => this.applyNameChange(oldName, newName));
+            } else {
+                this.applyNameChange(oldName, newName);
             }
         });
     },
+
+    applyNameChange: function(oldName, newName) {
+        this.state.users[this.myId].name = newName;
+        this.localNicknames[this.myId] = newName;
+        localStorage.setItem('kanban_nicks', JSON.stringify(this.localNicknames));
+        
+        let notesChanged = false;
+        Object.values(this.state.notes).forEach(note => {
+            if (note.assignedUser === oldName) {
+                note.assignedUser = newName;
+                notesChanged = true;
+            }
+        });
+        
+        this.saveState();
+        this.renderUsers();
+        this.renderChat();
+        if (notesChanged) this.renderNotes();
+        
+        this.broadcast({ type: 'USER_UPDATE', user: this.state.users[this.myId] });
+        if (notesChanged) this.broadcast({ type: 'FULL_STATE', state: this.state });
+    },
+
     toggleLogger: function() {
         const lw = document.getElementById('logger-window');
         lw.style.display = lw.style.display === 'flex' ? 'none' : 'flex';
