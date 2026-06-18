@@ -7,7 +7,6 @@
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root {
-            /* Sleek FAANG-level Palette */
             --bg-color: #f0f0f3;
             --text-color: #1d1d1f;
             --col-bg: rgba(225, 225, 230, 0.5);
@@ -32,12 +31,7 @@
             --shadow: 0 12px 32px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
         }
 
-        * { 
-            box-sizing: border-box; margin: 0; padding: 0; 
-            scrollbar-width: thin; 
-            scrollbar-color: var(--border-color) transparent;
-        }
-        
+        * { box-sizing: border-box; margin: 0; padding: 0; scrollbar-width: thin; scrollbar-color: var(--border-color) transparent; }
         body { font-family: var(--font-family); background: var(--bg-color); color: var(--text-color); overflow: hidden; display: flex; flex-direction: column; height: 100vh; transition: background-color 0.3s, color 0.3s; padding-bottom: env(safe-area-inset-bottom, 20px); }
         
         button { cursor: pointer; border: none; background: var(--col-bg); color: var(--text-color); padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; transition: var(--transition); border: 1px solid var(--border-color); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); }
@@ -70,15 +64,14 @@
         .user-avatar .tooltip { visibility: hidden; position: absolute; top: 120%; right: 50%; transform: translateX(50%); background: var(--text-color); color: var(--bg-color); padding: 6px 10px; border-radius: 6px; font-size: 11px; white-space: nowrap; opacity: 0; transition: opacity 0.2s; font-weight: normal; z-index: 100; text-align: center; line-height: 1.4; pointer-events: none;}
         .user-avatar:hover .tooltip { visibility: visible; opacity: 1; }
 
-        /* Board Area */
-        #board-container { flex: 1; overflow: hidden; position: relative; cursor: grab; margin-top: 70px; }
-        #board-container:active { cursor: grabbing; }
-        #canvas-wrapper { display: flex; gap: 24px; padding: 20px 40px; min-width: 100%; width: max-content; height: calc(100% - 40px); transform-origin: 0 0; transition: transform 0.05s linear; }
+        /* Board Area - Native Scrolling */
+        #board-container { flex: 1; overflow-x: auto; overflow-y: hidden; position: relative; margin-top: 70px; scroll-behavior: smooth; }
+        #canvas-wrapper { display: flex; gap: 24px; padding: 20px 40px; min-width: max-content; height: calc(100% - 40px); }
         
         /* Columns */
         .column { background: var(--col-bg); border-radius: 18px; display: flex; flex-direction: column; padding: 18px; gap: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); transition: flex-basis 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); width: 320px; flex-shrink: 0; }
         .column-header { font-weight: 800; font-size: 13px; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; color: var(--text-color); position: relative; min-height: 24px; opacity: 0.9; text-transform: uppercase;}
-        .column-content { flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; min-height: 200px; padding: 4px; padding-bottom: 30px; margin: -4px; }
+        .column-content { flex: 1; overflow-y: auto; overflow-x: visible; display: flex; flex-direction: column; gap: 14px; min-height: 200px; padding: 4px; padding-bottom: 30px; margin: -4px; }
         
         /* Layout Grid Ratios (Desktop) */
         @media (min-width: 1024px) {
@@ -96,8 +89,8 @@
             #top-bar { flex-direction: column; align-items: center; gap: 10px; padding: 10px; position: static; pointer-events: auto; }
             .top-group { flex-wrap: wrap; justify-content: center; width: 100%; }
             .top-center { position: static; transform: none; width: 100%; justify-content: center; }
-            #board-container { margin-top: 0; overflow-y: auto; overflow-x: hidden; cursor: default; }
-            #canvas-wrapper { flex-direction: column; width: 100%; padding: 10px; gap: 15px; transform: none !important; height: auto; }
+            #board-container { margin-top: 0; overflow-y: auto; overflow-x: hidden; }
+            #canvas-wrapper { flex-direction: column; width: 100%; min-width: 100%; padding: 10px; gap: 15px; height: auto; }
             .column { width: 100%; min-height: 300px; }
             .col-loader { display: none !important; }
             #col-review { display: none; }
@@ -112,31 +105,28 @@
         .archive-btn { display: none; font-size: 10px; padding: 4px 8px; background: transparent; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); cursor: pointer; }
         .archive-btn:hover { background: var(--accent-color); color: white; border-color: var(--accent-color); }
         #col-done:hover .archive-btn { display: block; }
-        
         .view-archive-btn { font-size: 11px; padding: 6px 8px; background: transparent; border: none; color: var(--text-color); opacity: 0.5; cursor: pointer; text-align: left; margin-top: auto; transition: opacity 0.2s; display: inline-block; width: fit-content; }
         .view-archive-btn:hover { opacity: 1; text-decoration: underline; }
 
         /* Perfectly Synced Factory Conveyor Animation */
-        .col-loader {
-            width: 90px; height: 14px; box-shadow: 0 3px 0 var(--text-color); position: absolute; left: 50%; transform: translateX(-50%); display: grid; clip-path: inset(-60px 0 -5px); opacity: 0.9;
-        }
-        .col-loader:after {
-            content: ""; position: relative;
-            background: repeating-linear-gradient(90deg, transparent 0 calc(50% - 8px), var(--border-color) 0 calc(50% + 8px), transparent 0 100%) 0 0/calc(100%/3) 100%;
-            animation: l6-1 2s infinite; z-index: 1;
+        .col-loader { width: 90px; height: 14px; box-shadow: 0 3px 0 var(--text-color); position: absolute; left: 50%; transform: translateX(-50%); display: grid; clip-path: inset(-60px 0 -5px); opacity: 0.9; }
+        .col-loader:after { 
+            content: ""; position: relative; 
+            background: repeating-linear-gradient(90deg, transparent 0 calc(50% - 8px), var(--border-color) 0 calc(50% + 8px), transparent 0 100%) 0 0/calc(100%/3) 100%; 
+            animation: l6-1 2s infinite linear; z-index: 3; 
         } 
-        .col-loader:before {
-            content: ""; position: absolute; width: 14px; aspect-ratio: 1; left: calc(50% - 7px); bottom: 0; border-radius: 50%; background: var(--accent-color);
-            animation: l6-2 2s infinite, shape-shift 10s infinite steps(1), color-shift 10s infinite steps(1); z-index: 2;
+        .col-loader:before { 
+            content: ""; position: absolute; width: 14px; aspect-ratio: 1; left: calc(50% - 7px); bottom: 0; border-radius: 50%; background: var(--accent-color); 
+            animation: l6-2 2s infinite linear, shape-shift 10s infinite steps(1), color-shift 10s infinite steps(1); z-index: 2; 
         }
         @keyframes l6-1 { 50%,100% {background-position: calc(100%/2) 0} }
-        @keyframes l6-2 { 0%,50% {transform:translateY(-80px); opacity: 0;} 51%, 100% {opacity: 1;} }
+        @keyframes l6-2 { 0%,20% {transform:translateY(-60px); opacity:0;} 25% {transform:translateY(-60px); opacity:1;} 35%,75% {transform:translateY(0); opacity:1;} 80%,100% {transform:translateY(0); opacity:0;} }
         @keyframes shape-shift { 
-            0%, 20% { border-radius: 50%; clip-path: none; } /* Circle */
-            20%, 40% { border-radius: 3px; clip-path: none; } /* Square */
-            40%, 60% { border-radius: 0; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); } /* Triangle */
-            60%, 80% { border-radius: 0; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); } /* Pentagon */
-            80%, 100% { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); } /* Star */
+            0%, 20% { border-radius: 50%; clip-path: none; } 
+            20%, 40% { border-radius: 3px; clip-path: none; } 
+            40%, 60% { border-radius: 0; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); } 
+            60%, 80% { border-radius: 0; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); } 
+            80%, 100% { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); } 
         }
         @keyframes color-shift {
             0%, 20% { background: var(--accent-color); }
@@ -148,18 +138,17 @@
 
         /* Sticky Notes */
         .note { background: var(--note-bg); border-radius: 12px; padding: 14px; box-shadow: var(--shadow); cursor: pointer; border: 1px solid var(--border-color); position: relative; transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s, outline 0.1s; display: flex; flex-direction: column; gap: 8px; z-index: 1; transform-origin: center; will-change: transform; }
-        
-        /* Boost color brightness in dark mode */
         [data-theme="dark"] .note[style*="background"] { filter: brightness(1.3) saturate(1.4); }
-
         .note:hover, .note.hover-focus { transform: scale(1.02); box-shadow: 0 16px 32px rgba(0,0,0,0.15); z-index: 50; }
         .note.dragging { opacity: 0.6; transform: scale(0.95) rotate(var(--rot, 0deg)); z-index: 100; box-shadow: 0 24px 48px rgba(0,0,0,0.3); pointer-events: none; }
+        .note.locked { outline: 2px solid var(--accent-color); outline-offset: 2px; }
         
         .drop-spacer { height: 4px; background: var(--accent-color); border-radius: 2px; margin: 4px 0; transition: all 0.2s; opacity: 0; }
         
         .note-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .note-subject { font-weight: 700; font-size: 14px; word-break: break-word; outline: none; border-radius: 4px; transition: background 0.2s; padding: 2px 4px; margin: -2px -4px; }
         .note-desc { font-size: 12px; opacity: 0.8; word-break: break-word; outline: none; border-radius: 4px; transition: background 0.2s; padding: 2px 4px; margin: -2px -4px; }
+        .note-desc ul { margin-left: 15px; padding-left: 5px; }
         
         .note-desc.empty-desc { opacity: 0.4; font-style: italic; min-height: 20px; }
         .note-subject.editing, .note-desc.editing { background: rgba(128,128,128,0.15); box-shadow: inset 0 0 0 1px var(--accent-color); cursor: text; font-style: normal; opacity: 1; }
@@ -173,18 +162,15 @@
         .note.status-done { background: rgba(52, 199, 89, 0.05); border-color: rgba(52, 199, 89, 0.3); }
         .note.paused { filter: grayscale(100%); opacity: 0.7; }
 
-        /* Pause/Play Button Visibility */
         .pause-btn { opacity: 0; pointer-events: none; transition: opacity 0.2s; }
         .note:hover .pause-btn { opacity: 1; pointer-events: auto; }
         .play-btn { opacity: 1; pointer-events: auto; color: var(--urgent-color); }
 
-        /* Dynamic Progress Bar */
         .progress-wrapper { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: rgba(128,128,128,0.1); border-radius: 0 0 12px 12px; overflow: hidden; }
         .progress-fill { position: absolute; top: 0; left: 0; height: 100%; width: var(--p, 0%); background: var(--accent-color); transition: width 1s linear; }
         .progress-mask { position: absolute; inset: 0; -webkit-mask: radial-gradient(circle closest-side, #000 90%, #0000) 0 0/var(--dot-size, 20%) 100%, linear-gradient(#000 0 0) center/calc(100% - 6px) 100% no-repeat; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); background-size: 200% 100%; animation: p-shimmer 2s infinite linear; pointer-events: none; }
         @keyframes p-shimmer { 0% {background-position: 200% 0;} 100% {background-position: -200% 0;} }
 
-        /* Quick Move Hover Button - Perfect Circle, Overlays Spinner, No Border */
         .quick-move-btn { 
             position: absolute; right: 10px; bottom: 10px; width: 24px; height: 24px; min-width: 24px; min-height: 24px;
             padding: 0; border-radius: 50%; background: var(--accent-color); color: white; display: none; 
@@ -194,7 +180,6 @@
         .quick-move-btn:hover { transform: scale(1.15); }
         .note:hover .quick-move-btn { display: flex; }
 
-        /* Status Animations (Mini Loaders) */
         .mini-loader { position: relative; width: 14px; aspect-ratio: 1; display: none; flex-shrink: 0; margin-left: auto; }
         .l-urgent { --_g: no-repeat radial-gradient(farthest-side, currentColor 94%, #0000); background: var(--_g) 0 0, var(--_g) 100% 0, var(--_g) 100% 100%, var(--_g) 0 100%; background-size: 40% 40%; animation: l38 0.5s infinite; color: var(--urgent-color); }
         @keyframes l38 { 100% {background-position: 100% 0, 100% 100%, 0 100%, 0 0} }
@@ -202,12 +187,22 @@
         @keyframes l16 { 50%,100% {background-position: 100% 100%, 50% 0, 0 100%} }
         .l-low { width: 16px; aspect-ratio: 1.154; --_g: no-repeat radial-gradient(farthest-side, currentColor 90%, #0000); background: var(--_g) 50% 0, var(--_g) 0 100%, var(--_g) 100% 100%; background-size: 35% calc(35%*1.154); animation: l16 2s infinite; color: var(--text-color); opacity: 0.6; }
 
-        /* History Tooltip on Hover - Hidden by default */
+        /* Tooltips */
         .history-hover-area { position: relative; cursor: help; font-size: 10px; opacity: 0; font-weight: 600; margin: 0 8px; transition: opacity 0.2s; pointer-events: none; }
         .note:hover .history-hover-area { opacity: 0.6; pointer-events: auto; }
         .history-hover-area:hover { opacity: 1; }
         .history-tooltip { display: none; position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: var(--text-color); color: var(--bg-color); padding: 10px; border-radius: 8px; width: max-content; max-width: 220px; z-index: 200; box-shadow: var(--shadow); pointer-events: none; font-weight: normal; text-align: left; line-height: 1.4; }
         .history-hover-area:hover .history-tooltip { display: flex; flex-direction: column; gap: 6px; }
+        #col-todo .history-tooltip { left: 0; transform: none; }
+        #col-done .history-tooltip { right: 0; left: auto; transform: none; }
+
+        /* Subtasks */
+        .checklist-progress { font-size: 10px; opacity: 0.8; display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+        .checklist-bar { flex: 1; height: 4px; background: rgba(128,128,128,0.2); border-radius: 2px; overflow: hidden; }
+        .checklist-fill { height: 100%; background: var(--accent-color); transition: width 0.3s; }
+        .checklist-item { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 4px 0; border-bottom: 1px solid rgba(128,128,128,0.1); }
+        .checklist-item input[type="checkbox"] { cursor: pointer; }
+        .checklist-item.done span { text-decoration: line-through; opacity: 0.5; }
 
         /* Floating Chat & Guide */
         #chat-fab { position: fixed; bottom: max(25px, env(safe-area-inset-bottom)); right: 25px; width: 56px; height: 56px; border-radius: 50%; background: var(--accent-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 10px 24px rgba(10, 132, 255, 0.4); cursor: pointer; z-index: 200; transition: transform 0.2s; border: none; }
@@ -243,36 +238,30 @@
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; grid-column: 1 / -1; border-top: 1px solid var(--border-color); padding-top: 16px;}
         .mobile-save-btn { display: none; position: absolute; top: 15px; right: 15px; width: 32px; height: 32px; border-radius: 50%; justify-content: center; align-items: center; padding: 0; font-size: 16px; }
 
-        /* History Log in Modal */
         .history-log { display: flex; flex-direction: column; gap: 6px; max-height: 120px; overflow-y: auto; font-size: 11px; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px; margin-top: 4px; border: 1px solid var(--border-color); }
         [data-theme="dark"] .history-log { background: rgba(255,255,255,0.03); }
         .history-entry { display: flex; justify-content: space-between; opacity: 0.85; }
         .history-entry .time { opacity: 0.6; font-size: 10px; }
 
-        /* Custom Toast */
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 1000; pointer-events: none; }
         .toast { background: var(--text-color); color: var(--bg-color); padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 20px rgba(0,0,0,0.2); animation: toast-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes toast-in { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes toast-out { to { transform: translateY(-20px); opacity: 0; } }
 
-        /* Improved Color Picker */
         .color-swatches { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         .swatch { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.15s; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1); }
         .swatch:hover { transform: scale(1.2); }
         .swatch.selected { border-color: var(--text-color); box-shadow: 0 0 0 2px var(--bg-color) inset, 0 0 0 1px var(--text-color) inset; }
 
-        /* Context Menu */
         #context-menu { position: absolute; background: var(--note-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--border-color); box-shadow: var(--shadow); border-radius: 12px; padding: 6px; display: none; flex-direction: column; min-width: 160px; z-index: 400; }
         #context-menu button { background: transparent; border: none; text-align: left; padding: 10px 12px; border-radius: 6px; box-shadow: none; font-size: 13px; margin: 1px 0; font-weight: 500;}
         #context-menu button:hover { background: var(--accent-color); color: white; }
         #context-menu button.danger:hover { background: var(--urgent-color); }
 
-        /* Confetti Animation */
         .confetti { position: fixed; width: 10px; height: 10px; pointer-events: none; z-index: 9999; }
         @keyframes confetti-pop { 0% { transform: translate(0,0) rotate(0deg) scale(1); opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0); opacity: 0; } }
         
-        /* API Code Block */
-        pre.api-code { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 11px; overflow-x: auto; margin-top: 5px; border: 1px solid #333; max-height: 200px; overflow-y: auto; white-space: pre; }
+        pre.api-code { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 11px; overflow-x: auto; margin-top: 5px; border: 1px solid #333; min-height: 150px; max-height: 250px; overflow-y: auto; white-space: pre; }
     </style>
 </head>
 <body>
@@ -282,14 +271,13 @@
             <div class="brand-logo">Trodo</div>
         </div>
 
-        <!-- Centered Join UI -->
         <div class="top-group top-center">
             <input type="text" id="peer-id-input" placeholder="Join ID..." style="width: 100px; padding: 6px; font-size: 12px;" oninput="app.toggleJoinBtn()">
             <button id="join-btn" onclick="app.connectToPeer()" style="padding: 6px 10px; display: none;">Join</button>
             <div style="border-left: 1px solid var(--border-color); height: 16px; margin: 0 2px;"></div>
             
             <span class="id-display" onclick="app.handleIdClick(event)" title="Click to reveal/edit" id="my-peer-id-container">
-                <span id="my-peer-id-mask">***</span>
+                <span id="my-peer-id-mask">...</span>
                 <span id="my-peer-id" style="display:none;"></span>
             </span>
             
@@ -404,7 +392,7 @@
     <div id="guide-modal" class="overlay" onmousedown="if(event.target===this) { this.classList.remove('active'); setTimeout(()=>this.style.display='none',200); }">
         <div class="modal" style="width: 600px; max-height: 85vh; overflow-y: auto;">
             <h3 style="margin-bottom: 5px;">Trodo Pro Guide</h3>
-            <p style="font-size: 13px; opacity: 0.8; line-height: 1.5;">Welcome to Trodo! This is a spatial, real-time Kanban board. Drag the background to pan, and use your mouse wheel to zoom in and out.</p>
+            <p style="font-size: 13px; opacity: 0.8; line-height: 1.5;">Welcome to Trodo! This is a spatial, real-time Kanban board. Use your mouse wheel to scroll horizontally.</p>
             
             <h4 style="margin-top: 10px; font-size: 12px; text-transform: uppercase; opacity: 0.6;">Keyboard Shortcuts</h4>
             <ul style="font-size: 13px; list-style: none; display: flex; flex-direction: column; gap: 8px;">
@@ -496,7 +484,16 @@ const puppeteer = require('puppeteer');
                 </div>
                 
                 <div class="form-group full">
-                    <textarea id="note-desc" rows="2" placeholder="Description (Optional)"></textarea>
+                    <textarea id="note-desc" rows="2" placeholder="Description (Optional) - Supports **bold**, *italic*, - lists"></textarea>
+                </div>
+
+                <div class="form-group full">
+                    <label>Subtasks</label>
+                    <div id="checklist-container" style="display:flex; flex-direction:column; gap:4px; margin-bottom:4px;"></div>
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="new-check-input" placeholder="Add subtask..." style="flex:1; padding:6px; font-size:11px;" onkeydown="if(event.key==='Enter'){event.preventDefault(); app.addChecklistItem();}">
+                        <button type="button" onclick="app.addChecklistItem()" style="padding:6px 10px; font-size:11px;">Add</button>
+                    </div>
                 </div>
 
                 <div class="form-group full">
@@ -596,19 +593,17 @@ const app = {
     state: { notes: {}, users: {}, chat: [], settings: { reviewEnabled: false, apiCode: null }, archived: {} },
     localNicknames: {},
     myId: null, peer: null, connections: {},
-    transform: { scale: 1, x: 0, y: 0 },
-    isPanning: false, startX: 0, startY: 0,
     hoveredNoteId: null, ctxNoteId: null, draggedNoteId: null,
     unreadChat: 0, selectedColor: '',
     isTabActive: true, hasUnseenChanges: false,
     idMaskTimeout: null,
+    currentChecklist: [],
 
     init: async function() {
         this.loadState();
         if(!this.state.settings.apiCode) this.state.settings.apiCode = Math.random().toString(36).substring(2, 10);
         
         this.setupTheme();
-        this.setupPanZoom();
         this.setupDragAndDrop();
         this.setupShortcuts();
         this.setupChatEvents();
@@ -618,18 +613,10 @@ const app = {
         // Optimized Progress Loop
         setInterval(() => this.updateProgressUI(), 1000);
 
-        // Favicon Visibility Tracking
-        window.addEventListener('focus', () => { 
-            this.isTabActive = true; 
-            this.hasUnseenChanges = false; 
-            this.updateFavicon(); 
-        });
-        window.addEventListener('blur', () => { 
-            this.isTabActive = false; 
-        });
+        window.addEventListener('focus', () => { this.isTabActive = true; this.hasUnseenChanges = false; this.updateFavicon(); });
+        window.addEventListener('blur', () => { this.isTabActive = false; });
         this.updateFavicon();
 
-        // Context Menu Cleanup & ID Mask Cleanup
         window.addEventListener('mousedown', (e) => {
             const menu = document.getElementById('context-menu');
             if (menu && menu.style.display === 'flex') {
@@ -647,6 +634,28 @@ const app = {
         this.initPeer(urlParams.get('myid'), urlParams.get('room'));
     },
 
+    // --- UTILS ---
+    debounce: function(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    },
+
+    parseMD: function(text) {
+        if (!text) return '<div class="empty-desc">+ Add description...</div>';
+        let html = text
+            .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/^- (.*)$/gm, '<li>$1</li>');
+        if (html.includes('<li>')) {
+            html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+        }
+        return html;
+    },
+
     // --- ROBOT API ---
     initAPI: function() {
         window.TrodoAPI = {
@@ -660,23 +669,10 @@ const app = {
                 return "Authentication failed.";
             },
             _checkAuth: function() { if(!this._authenticated) throw new Error("Not authenticated. Call TrodoAPI.authenticate('code') first."); },
-            getBoardState: function() {
-                this._checkAuth();
-                return JSON.parse(JSON.stringify(app.state));
-            },
-            getTasks: function(column) {
-                this._checkAuth();
-                return Object.values(app.state.notes).filter(n => n.status === column);
-            },
-            getAssignedTasks: function(assignee = 'Robot') {
-                this._checkAuth();
-                return Object.values(app.state.notes).filter(n => n.assignedUser && n.assignedUser.toLowerCase() === assignee.toLowerCase());
-            },
-            moveTask: function(taskId, targetColumn) {
-                this._checkAuth();
-                const note = app.state.notes[taskId];
-                if(note) app.moveNoteNetwork(note, targetColumn);
-            },
+            getBoardState: function() { this._checkAuth(); return JSON.parse(JSON.stringify(app.state)); },
+            getTasks: function(column) { this._checkAuth(); return Object.values(app.state.notes).filter(n => n.status === column); },
+            getAssignedTasks: function(assignee = 'Robot') { this._checkAuth(); return Object.values(app.state.notes).filter(n => n.assignedUser && n.assignedUser.toLowerCase() === assignee.toLowerCase()); },
+            moveTask: function(taskId, targetColumn) { this._checkAuth(); const note = app.state.notes[taskId]; if(note) app.moveNoteNetwork(note, targetColumn); },
             updateTask: function(taskId, updates) {
                 this._checkAuth();
                 const note = app.state.notes[taskId];
@@ -685,7 +681,7 @@ const app = {
                     note.timestamps.lastModified = Date.now();
                     if(!note.history) note.history = [];
                     note.history.push({ action: 'Updated by API', user: 'API', time: Date.now() });
-                    app.saveState(); app.renderNotes(); app.broadcast({type:'NOTE_UPDATE', note});
+                    app.saveState(); app.patchNoteDOM(note); app.broadcastPatch(taskId, updates);
                 }
             },
             assignTask: function(taskId, assignee) {
@@ -696,7 +692,7 @@ const app = {
                     note.timestamps.lastModified = Date.now();
                     if(!note.history) note.history = [];
                     note.history.push({ action: `Assigned to ${assignee}`, user: 'API', time: Date.now() });
-                    app.saveState(); app.renderNotes(); app.broadcast({type:'NOTE_UPDATE', note});
+                    app.saveState(); app.patchNoteDOM(note); app.broadcastPatch(taskId, { assignedUser: assignee });
                 }
             },
             createTask: function(taskData) {
@@ -708,22 +704,15 @@ const app = {
                     assumedTimeSpan: taskData.assumedTimeSpan || null, status: taskData.status || 'todo',
                     assignedUser: taskData.assignedUser || null, accumulatedProgressTime: 0, isPaused: false,
                     orderIndex: 0, history: [{ action: 'Created via API', user: 'API', time: Date.now() }],
-                    timestamps: { created: Date.now(), inProgress: null, completed: null, lastModified: Date.now() }
+                    timestamps: { created: Date.now(), inProgress: null, completed: null, lastModified: Date.now() },
+                    checklists: taskData.checklists || []
                 };
                 app.state.notes[id] = note;
-                app.saveState(); app.renderNotes(); app.broadcast({type:'NOTE_UPDATE', note});
+                app.saveState(); app.patchNoteDOM(note); app.broadcast({type:'NOTE_UPDATE', note});
                 return id;
             },
-            deleteTask: function(taskId) {
-                this._checkAuth();
-                delete app.state.notes[taskId];
-                app.saveState(); app.renderNotes(); app.broadcast({type:'NOTE_DELETED', noteId: taskId});
-            },
-            duplicateTask: function(taskId) {
-                this._checkAuth();
-                app.ctxNoteId = taskId;
-                app.ctxDuplicate();
-            },
+            deleteTask: function(taskId) { this._checkAuth(); delete app.state.notes[taskId]; app.saveState(); document.getElementById(`note-${taskId}`)?.remove(); app.broadcast({type:'NOTE_DELETED', noteId: taskId}); },
+            duplicateTask: function(taskId) { this._checkAuth(); app.ctxNoteId = taskId; app.ctxDuplicate(); },
             clearColumn: function(column) {
                 this._checkAuth();
                 let changed = false;
@@ -732,12 +721,11 @@ const app = {
                         if(!app.state.archived) app.state.archived = {};
                         app.state.archived[n.id] = n;
                         delete app.state.notes[n.id];
+                        document.getElementById(`note-${n.id}`)?.remove();
                         changed = true;
                     }
                 });
-                if(changed) {
-                    app.saveState(); app.renderNotes(); app.broadcast({type:'FULL_STATE', state: app.state});
-                }
+                if(changed) { app.saveState(); app.broadcast({type:'FULL_STATE', state: app.state}); }
             },
             sendChat: function(message) {
                 this._checkAuth();
@@ -745,10 +733,7 @@ const app = {
                 app.state.chat.push(msg);
                 app.saveState(); app.renderChat(); app.broadcast({type:'CHAT', msg});
             },
-            onTaskUpdated: function(callback) {
-                this._checkAuth();
-                this._callbacks.push(callback);
-            }
+            onTaskUpdated: function(callback) { this._checkAuth(); this._callbacks.push(callback); }
         };
     },
 
@@ -764,11 +749,7 @@ const app = {
         const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="${color}"/></svg>`;
         const url = `data:image/svg+xml;base64,${btoa(svg)}`;
         let link = document.querySelector("link[rel~='icon']");
-        if (!link) {
-            link = document.createElement('link');
-            link.rel = 'icon';
-            document.head.appendChild(link);
-        }
+        if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
         link.href = url;
     },
 
@@ -802,19 +783,9 @@ const app = {
         const panel = document.getElementById('chat-panel');
 
         panel.addEventListener('mousedown', (e) => e.stopPropagation());
-
-        input.addEventListener('keydown', (e) => {
-            e.stopPropagation();
-            if(e.key === 'Enter') {
-                e.preventDefault();
-                this.sendChat();
-            }
-        });
+        input.addEventListener('keydown', (e) => { e.stopPropagation(); if(e.key === 'Enter') { e.preventDefault(); this.sendChat(); } });
         input.addEventListener('mousedown', (e) => e.stopPropagation());
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.sendChat();
-        });
+        btn.addEventListener('click', (e) => { e.stopPropagation(); this.sendChat(); });
     },
 
     // --- DOM MODAL & UI UTILS ---
@@ -854,11 +825,7 @@ const app = {
         }
 
         const close = () => { over.classList.remove('active'); setTimeout(()=>over.style.display='none', 200); };
-        
-        over.style.display = 'flex';
-        void over.offsetWidth; 
-        over.classList.add('active');
-
+        over.style.display = 'flex'; void over.offsetWidth; over.classList.add('active');
         if(type === 'prompt') input.focus();
 
         okBtn.onclick = () => { close(); if(callback) callback(type === 'prompt' ? input.value : true); };
@@ -911,12 +878,12 @@ const app = {
                 if(n.status === 'done') {
                     this.state.archived[n.id] = n;
                     delete this.state.notes[n.id];
+                    document.getElementById(`note-${n.id}`)?.remove();
                     changed = true;
                 }
             });
             if(changed) {
                 this.saveState();
-                this.renderNotes();
                 this.broadcast({ type: 'FULL_STATE', state: this.state });
                 this.toast("Tasks archived successfully.");
             }
@@ -959,7 +926,7 @@ const app = {
             this.state.notes[id].status = 'done';
             delete this.state.archived[id];
             this.saveState();
-            this.renderNotes();
+            this.patchNoteDOM(this.state.notes[id]);
             this.broadcast({ type: 'FULL_STATE', state: this.state });
             this.viewArchive();
         }
@@ -1024,7 +991,7 @@ const app = {
                 }
                 const modal = document.getElementById('modal-overlay');
                 if (modal.classList.contains('active')) {
-                    if (e.target.tagName === 'TEXTAREA') return; // Allow newlines in textarea
+                    if (e.target.tagName === 'TEXTAREA' || e.target.id === 'new-check-input') return; // Allow newlines in textarea and enter in checklist
                     this.saveNote();
                     e.preventDefault();
                     return;
@@ -1073,9 +1040,9 @@ const app = {
                         note.orderIndex = targetNote.orderIndex || 0;
                         targetNote.orderIndex = temp;
                         note.timestamps.lastModified = targetNote.timestamps.lastModified = Date.now();
-                        this.saveState(); this.renderNotes();
-                        this.broadcast({type:'NOTE_UPDATE', note});
-                        this.broadcast({type:'NOTE_UPDATE', note: targetNote});
+                        this.saveState(); this.sortColumnDOM(note.status);
+                        this.broadcastPatch(note.id, { orderIndex: note.orderIndex, timestamps: note.timestamps });
+                        this.broadcastPatch(targetNote.id, { orderIndex: targetNote.orderIndex, timestamps: targetNote.timestamps });
                     } else if (e.key === 'ArrowDown' && currentIndex < siblings.length - 1) {
                         const targetNoteId = siblings[currentIndex + 1].dataset.id;
                         const targetNote = this.state.notes[targetNoteId];
@@ -1083,9 +1050,9 @@ const app = {
                         note.orderIndex = targetNote.orderIndex || 0;
                         targetNote.orderIndex = temp;
                         note.timestamps.lastModified = targetNote.timestamps.lastModified = Date.now();
-                        this.saveState(); this.renderNotes();
-                        this.broadcast({type:'NOTE_UPDATE', note});
-                        this.broadcast({type:'NOTE_UPDATE', note: targetNote});
+                        this.saveState(); this.sortColumnDOM(note.status);
+                        this.broadcastPatch(note.id, { orderIndex: note.orderIndex, timestamps: note.timestamps });
+                        this.broadcastPatch(targetNote.id, { orderIndex: targetNote.orderIndex, timestamps: targetNote.timestamps });
                     }
                 }
             }
@@ -1119,6 +1086,9 @@ const app = {
         this.toggleJoinBtn();
     },
     broadcast: function(payload) { Object.values(this.connections).forEach(conn => { if (conn.open) conn.send(payload); }); },
+    broadcastPatch: function(noteId, patch) {
+        this.broadcast({ type: 'NOTE_PATCH', noteId, patch, timestamp: Date.now(), user: this.myId });
+    },
 
     handleNetworkData: function(data, senderId) {
         if (!this.isTabActive) {
@@ -1144,14 +1114,26 @@ const app = {
             this.state.chat = Array.from(new Map(allChat.map(item => [`${item.time}_${item.user}`, item])).values()).sort((a,b) => a.time - b.time);
             this.saveState(); this.renderAll();
         } 
-        else if (data.type === 'NOTE_UPDATE') { 
-            this.state.notes[data.note.id] = data.note; 
-            this.saveState(); this.renderNotes(); 
-            if(window.TrodoAPI && window.TrodoAPI._callbacks) {
-                window.TrodoAPI._callbacks.forEach(cb => cb(data.note));
+        else if (data.type === 'NOTE_PATCH') {
+            const note = this.state.notes[data.noteId];
+            if (note && data.timestamp > (note.timestamps.lastModified || 0)) {
+                Object.assign(note, data.patch);
+                note.timestamps.lastModified = data.timestamp;
+                this.saveState();
+                this.patchNoteDOM(note);
+                if(window.TrodoAPI && window.TrodoAPI._callbacks) window.TrodoAPI._callbacks.forEach(cb => cb(note));
             }
         }
-        else if (data.type === 'NOTE_DELETED') { delete this.state.notes[data.noteId]; this.saveState(); this.renderNotes(); }
+        else if (data.type === 'NOTE_UPDATE') { 
+            this.state.notes[data.note.id] = data.note; 
+            this.saveState(); this.patchNoteDOM(data.note); 
+            if(window.TrodoAPI && window.TrodoAPI._callbacks) window.TrodoAPI._callbacks.forEach(cb => cb(data.note));
+        }
+        else if (data.type === 'NOTE_DELETED') { 
+            delete this.state.notes[data.noteId]; 
+            this.saveState(); 
+            document.getElementById(`note-${data.noteId}`)?.remove(); 
+        }
         else if (data.type === 'USER_UPDATE') { this.state.users[data.user.id] = data.user; this.saveState(); this.renderUsers(); this.renderChat(); }
         else if (data.type === 'CHAT') {
             this.state.chat.push(data.msg);
@@ -1160,6 +1142,19 @@ const app = {
                 document.getElementById('chat-badge').style.display = 'block';
             }
             this.saveState(); this.renderChat();
+        }
+        else if (data.type === 'EDIT_LOCK') {
+            const el = document.getElementById(`note-${data.noteId}`);
+            if (el) {
+                if (data.isLocked) {
+                    el.classList.add('locked');
+                    // Find user color or default
+                    el.style.outlineColor = 'var(--accent-color)';
+                } else {
+                    el.classList.remove('locked');
+                    el.style.outline = 'none';
+                }
+            }
         }
     },
 
@@ -1175,7 +1170,12 @@ const app = {
     },
 
     // --- UI RENDERING ---
-    renderAll: function() { this.renderNotes(); this.renderUsers(); this.renderChat(); },
+    renderAll: function() { 
+        document.querySelectorAll('.column-content').forEach(c => c.innerHTML = '');
+        Object.values(this.state.notes).forEach(note => this.patchNoteDOM(note));
+        this.renderUsers(); 
+        this.renderChat(); 
+    },
 
     renderUsers: function() {
         const container = document.getElementById('users-container');
@@ -1218,111 +1218,145 @@ const app = {
         container.scrollTop = container.scrollHeight;
     },
 
-    renderNotes: function() {
-        document.querySelectorAll('.column-content').forEach(c => c.innerHTML = '');
-        let inProgressCount = 0;
-        const notesArr = Object.values(this.state.notes);
-        
-        // Gravity-Based Sorting: Forces all isPaused: true items to the bottom of the list before priority is calculated
-        notesArr.sort((a, b) => {
-            const aPaused = a.isPaused ? 1 : 0;
-            const bPaused = b.isPaused ? 1 : 0;
-            if (aPaused !== bPaused) return aPaused - bPaused;
-
-            const priorityWeight = { urgent: 3, default: 2, low: 1 };
-            const aWeight = priorityWeight[a.priority] || 2;
-            const bWeight = priorityWeight[b.priority] || 2;
-            if (bWeight !== aWeight) return bWeight - aWeight;
-
-            if ((b.orderIndex||0) !== (a.orderIndex||0)) return (b.orderIndex||0) - (a.orderIndex||0);
-            return a.timestamps.created - b.timestamps.created;
-        });
-
-        notesArr.forEach(note => {
-            const col = document.querySelector(`.column-content[data-status="${note.status}"]`);
+    sortColumnDOM: function(status) {
+        requestAnimationFrame(() => {
+            const col = document.querySelector(`.column-content[data-status="${status}"]`);
             if (!col) return;
-            if (note.status === 'in-progress' && !note.isPaused) inProgressCount++;
+            const notes = Array.from(col.querySelectorAll('.note:not(.dragging)'));
+            
+            notes.sort((a, b) => {
+                const nA = this.state.notes[a.dataset.id];
+                const nB = this.state.notes[b.dataset.id];
+                if(!nA || !nB) return 0;
+                
+                const aPaused = nA.isPaused ? 1 : 0;
+                const bPaused = nB.isPaused ? 1 : 0;
+                if (aPaused !== bPaused) return aPaused - bPaused;
 
-            const el = document.createElement('div');
-            el.className = `note priority-${note.priority} status-${note.status} ${note.isPaused ? 'paused' : ''}`;
-            el.draggable = true;
+                const priorityWeight = { urgent: 3, default: 2, low: 1 };
+                const aWeight = priorityWeight[nA.priority] || 2;
+                const bWeight = priorityWeight[nB.priority] || 2;
+                if (bWeight !== aWeight) return bWeight - aWeight;
+
+                if ((nB.orderIndex||0) !== (nA.orderIndex||0)) return (nB.orderIndex||0) - (nA.orderIndex||0);
+                return nA.timestamps.created - nB.timestamps.created;
+            });
+            
+            notes.forEach(n => col.appendChild(n));
+            
+            // Update loader visibility
+            if(status === 'in-progress') {
+                const hasActive = notes.some(n => {
+                    const note = this.state.notes[n.dataset.id];
+                    return note && !note.isPaused;
+                });
+                document.getElementById('main-progress-loader').style.display = hasActive ? 'grid' : 'none';
+            }
+        });
+    },
+
+    patchNoteDOM: function(note) {
+        let el = document.getElementById(`note-${note.id}`);
+        let isNew = false;
+        
+        if (!el) {
+            el = document.createElement('div');
             el.id = `note-${note.id}`;
             el.dataset.id = note.id;
-            
-            if(note.color) el.style.background = note.color;
+            el.draggable = true;
+            el.ondblclick = (e) => { if(!e.target.isContentEditable && e.target.tagName !== 'INPUT') this.openNoteModal(note.id); };
+            el.onmouseenter = () => { this.hoveredNoteId = note.id; el.classList.add('hover-focus'); };
+            el.onmouseleave = () => { this.hoveredNoteId = null; el.classList.remove('hover-focus'); };
+            el.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                this.ctxNoteId = note.id;
+                const menu = document.getElementById('context-menu');
+                menu.style.display = 'flex';
+                menu.style.left = e.pageX + 'px';
+                menu.style.top = e.pageY + 'px';
+            });
+            isNew = true;
+        }
 
-            let tagsHtml = (note.tags||[]).map(t => `<span class="tag">${t}</span>`).join('');
-            let userHtml = '';
-            if (note.assignedUser) {
-                let displayChar = note.assignedUser.charAt(0).toUpperCase();
-                let tooltipName = note.assignedUser;
-                
-                if (note.assignedUser.toLowerCase() === 'robot') {
-                    displayChar = '🤖';
-                } else {
-                    // Try to find if it matches a known user ID
-                    const matchedUser = Object.values(this.state.users).find(u => u.name === note.assignedUser);
-                    if (matchedUser) {
-                        tooltipName = this.localNicknames[matchedUser.id] || matchedUser.name;
-                        displayChar = tooltipName.charAt(0).toUpperCase();
-                    }
-                }
-                
-                userHtml = `<div class="user-avatar" style="width:20px;height:20px;font-size:9px;position:absolute;top:10px;right:10px; border:none; z-index:10;">
-                    ${displayChar}
-                    <div class="tooltip">${tooltipName}</div>
-                </div>`;
-            }
+        el.className = `note priority-${note.priority} status-${note.status} ${note.isPaused ? 'paused' : ''}`;
+        if(note.color) el.style.background = note.color;
+        else el.style.background = '';
 
-            let progressHtml = '', actionHtml = '', spinnerHtml = '';
-            if (note.status === 'in-progress') {
-                const btnClass = note.isPaused ? 'play-btn' : 'pause-btn';
-                const btnText = note.isPaused ? '▶ Play' : '⏸ Pause';
-                actionHtml = `<button class="${btnClass}" onclick="app.togglePause('${note.id}', event)" style="padding:4px 8px; font-size:10px; border-radius:4px; margin-right:6px; box-shadow:none;">${btnText}</button>`;
-                
-                if(!note.isPaused) {
-                    const lClass = note.priority === 'urgent' ? 'l-urgent' : (note.priority === 'low' ? 'l-low' : 'l-default');
-                    spinnerHtml = `<div class="mini-loader ${lClass}" style="display:block;"></div>`;
-                }
-
-                if(note.assumedTimeSpan) {
-                    const textLen = (note.desc?.length || 0);
-                    const dots = Math.max(2, Math.min(15, Math.floor(textLen / 20) + 3));
-                    const dotSize = 100 / dots;
-                    progressHtml = `
-                        <div class="progress-wrapper" style="--dot-size: ${dotSize}%">
-                            <div class="progress-mask"></div>
-                            <div class="progress-fill" id="prog-${note.id}" data-val="0"></div>
-                        </div>`;
+        let tagsHtml = (note.tags||[]).map(t => `<span class="tag">${t}</span>`).join('');
+        let userHtml = '';
+        if (note.assignedUser) {
+            let displayChar = note.assignedUser.charAt(0).toUpperCase();
+            let tooltipName = note.assignedUser;
+            if (note.assignedUser.toLowerCase() === 'robot') {
+                displayChar = '🤖';
+            } else {
+                const matchedUser = Object.values(this.state.users).find(u => u.name === note.assignedUser);
+                if (matchedUser) {
+                    tooltipName = this.localNicknames[matchedUser.id] || matchedUser.name;
+                    displayChar = tooltipName.charAt(0).toUpperCase();
                 }
             }
+            userHtml = `<div class="user-avatar" style="width:20px;height:20px;font-size:9px;position:absolute;top:10px;right:10px; border:none; z-index:10;">
+                ${displayChar}<div class="tooltip">${tooltipName}</div></div>`;
+        }
 
-            const descContent = note.desc ? note.desc : '<div class="empty-desc">+ Add description...</div>';
+        let progressHtml = '', actionHtml = '', spinnerHtml = '';
+        if (note.status === 'in-progress') {
+            const btnClass = note.isPaused ? 'play-btn' : 'pause-btn';
+            const btnText = note.isPaused ? '▶ Play' : '⏸ Pause';
+            actionHtml = `<button class="${btnClass}" onclick="app.togglePause('${note.id}', event)" style="padding:4px 8px; font-size:10px; border-radius:4px; margin-right:6px; box-shadow:none;">${btnText}</button>`;
             
-            const cols = ['todo', 'in-progress', this.state.settings.reviewEnabled ? 'review' : null, 'done'].filter(Boolean);
-            const colIdx = cols.indexOf(note.status);
-            let moveBtnHtml = '';
-            if(colIdx < cols.length - 1) {
-                const nextColName = cols[colIdx + 1];
-                const tooltipText = nextColName === 'done' ? 'Complete Task' : `Move to ${nextColName}`;
-                moveBtnHtml = `<button class="quick-move-btn" onclick="app.moveNoteNetwork(app.state.notes['${note.id}'], '${nextColName}'); event.stopPropagation();" title="${tooltipText}">></button>`;
+            if(!note.isPaused) {
+                const lClass = note.priority === 'urgent' ? 'l-urgent' : (note.priority === 'low' ? 'l-low' : 'l-default');
+                spinnerHtml = `<div class="mini-loader ${lClass}" style="display:block;"></div>`;
             }
 
-            // History Tooltip Generation
-            const createdDate = new Date(note.timestamps.created).toLocaleDateString(undefined, {month:'short', day:'numeric'});
-            let historyHtml = (note.history || []).map(h => {
-                const uName = h.user === 'API' ? '🤖 API' : (this.localNicknames[h.user] || (this.state.users[h.user] ? this.state.users[h.user].name : 'Unknown'));
-                const timeStr = new Date(h.time).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
-                return `<div><b>${h.action}</b> by ${uName}<br><span style="font-size:9px;opacity:0.7">${timeStr}</span></div>`;
-            }).reverse().join('<hr style="margin:4px 0; border:none; border-top:1px solid rgba(128,128,128,0.2)">');
-            
-            const timestampHtml = `
-                <div class="history-hover-area">
-                    ${createdDate}
-                    <div class="history-tooltip">${historyHtml}</div>
+            if(note.assumedTimeSpan) {
+                const textLen = (note.desc?.length || 0);
+                const dots = Math.max(2, Math.min(15, Math.floor(textLen / 20) + 3));
+                const dotSize = 100 / dots;
+                progressHtml = `
+                    <div class="progress-wrapper" style="--dot-size: ${dotSize}%">
+                        <div class="progress-mask"></div>
+                        <div class="progress-fill" id="prog-${note.id}" data-val="0"></div>
+                    </div>`;
+            }
+        }
+
+        const descContent = this.parseMD(note.desc);
+        
+        const cols = ['todo', 'in-progress', this.state.settings.reviewEnabled ? 'review' : null, 'done'].filter(Boolean);
+        const colIdx = cols.indexOf(note.status);
+        let moveBtnHtml = '';
+        if(colIdx < cols.length - 1) {
+            const nextColName = cols[colIdx + 1];
+            const tooltipText = nextColName === 'done' ? 'Complete Task' : `Move to ${nextColName}`;
+            moveBtnHtml = `<button class="quick-move-btn" onclick="app.moveNoteNetwork(app.state.notes['${note.id}'], '${nextColName}'); event.stopPropagation();" title="${tooltipText}">></button>`;
+        }
+
+        const createdDate = new Date(note.timestamps.created).toLocaleDateString(undefined, {month:'short', day:'numeric'});
+        let historyHtml = (note.history || []).map(h => {
+            const uName = h.user === 'API' ? '🤖 API' : (this.localNicknames[h.user] || (this.state.users[h.user] ? this.state.users[h.user].name : 'Unknown'));
+            const timeStr = new Date(h.time).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+            return `<div><b>${h.action}</b> by ${uName}<br><span style="font-size:9px;opacity:0.7">${timeStr}</span></div>`;
+        }).reverse().join('<hr style="margin:4px 0; border:none; border-top:1px solid rgba(128,128,128,0.2)">');
+        
+        const timestampHtml = `<div class="history-hover-area">${createdDate}<div class="history-tooltip">${historyHtml}</div></div>`;
+
+        let checklistHtml = '';
+        if (note.checklists && note.checklists.length > 0) {
+            const doneCount = note.checklists.filter(c => c.done).length;
+            const pct = (doneCount / note.checklists.length) * 100;
+            checklistHtml = `
+                <div class="checklist-progress">
+                    <div class="checklist-bar"><div class="checklist-fill" style="width:${pct}%"></div></div>
+                    <span>${doneCount}/${note.checklists.length}</span>
                 </div>
             `;
+        }
 
+        // Only update innerHTML if we are not currently quick-editing this note
+        if (!el.querySelector('.editing')) {
             el.innerHTML = `
                 ${moveBtnHtml}
                 ${userHtml}
@@ -1330,6 +1364,7 @@ const app = {
                     <div class="note-subject" id="subj-${note.id}" onclick="app.startQuickEdit(this, '${note.id}', 'subject', event)">${note.subject}</div>
                 </div>
                 <div class="note-desc ${!note.desc?'empty-desc':''}" id="desc-${note.id}" onclick="app.startQuickEdit(this, '${note.id}', 'desc', event)">${descContent}</div>
+                ${checklistHtml}
                 <div class="note-tags">${tagsHtml}</div>
                 
                 <div class="note-meta">
@@ -1342,33 +1377,31 @@ const app = {
                 </div>
                 ${progressHtml}
             `;
+        }
 
-            el.ondblclick = (e) => { if(!e.target.isContentEditable) this.openNoteModal(note.id); };
-            el.onmouseenter = () => { this.hoveredNoteId = note.id; el.classList.add('hover-focus'); };
-            el.onmouseleave = () => { this.hoveredNoteId = null; el.classList.remove('hover-focus'); };
-            
-            el.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                this.ctxNoteId = note.id;
-                const menu = document.getElementById('context-menu');
-                menu.style.display = 'flex';
-                menu.style.left = e.pageX + 'px';
-                menu.style.top = e.pageY + 'px';
-            });
-
-            col.appendChild(el);
-        });
-
-        document.getElementById('main-progress-loader').style.display = inProgressCount > 0 ? 'grid' : 'none';
-        this.updateProgressUI(true);
+        if (isNew || el.parentElement?.dataset.status !== note.status) {
+            const col = document.querySelector(`.column-content[data-status="${note.status}"]`);
+            if (col) col.appendChild(el);
+        }
+        
+        this.sortColumnDOM(note.status);
     },
 
     // --- QUICK EDIT LOGIC ---
     startQuickEdit: function(el, noteId, field, e) {
         if(e) e.stopPropagation();
         
-        if(el.classList.contains('empty-desc')) { el.innerHTML = ''; el.classList.remove('empty-desc'); }
+        const note = this.state.notes[noteId];
+        if(!note) return;
+
+        if(field === 'desc') {
+            // Revert markdown to raw text for editing
+            el.innerText = note.desc || '';
+        } else if(el.classList.contains('empty-desc')) { 
+            el.innerHTML = ''; 
+        }
         
+        el.classList.remove('empty-desc');
         el.contentEditable = true;
         el.classList.add('editing');
         el.focus();
@@ -1380,19 +1413,36 @@ const app = {
         sel.removeAllRanges();
         sel.addRange(range);
 
+        this.broadcast({ type: 'EDIT_LOCK', noteId, user: this.myId, isLocked: true });
+
+        // Debounced input handler for real-time sync without flooding
+        const debouncedPatch = this.debounce((newVal) => {
+            const patch = {};
+            patch[field] = newVal;
+            this.state.notes[noteId][field] = newVal;
+            this.state.notes[noteId].timestamps.lastModified = Date.now();
+            this.saveState();
+            this.broadcastPatch(noteId, patch);
+        }, 500);
+
+        el.oninput = () => {
+            debouncedPatch(el.innerText);
+        };
+
         el.onblur = () => {
             el.contentEditable = false;
             el.classList.remove('editing');
-            const note = this.state.notes[noteId];
-            if(!note) return;
-            const newVal = el.innerText.trim();
+            el.oninput = null;
             
+            const newVal = el.innerText.trim();
             if(field === 'subject' && newVal !== note.subject) note.subject = newVal || 'Untitled';
             if(field === 'desc' && newVal !== note.desc) note.desc = newVal;
             
             note.timestamps.lastModified = Date.now();
-            this.saveState(); this.broadcast({type:'NOTE_UPDATE', note});
-            this.renderNotes();
+            this.saveState(); 
+            this.broadcastPatch(noteId, { [field]: note[field], timestamps: note.timestamps });
+            this.broadcast({ type: 'EDIT_LOCK', noteId, user: this.myId, isLocked: false });
+            this.patchNoteDOM(note); // Re-render to apply markdown
         };
 
         el.onkeydown = (ev) => { 
@@ -1443,7 +1493,7 @@ const app = {
 
         this.state.notes[newId] = duplicate;
         this.saveState();
-        this.renderNotes();
+        this.patchNoteDOM(duplicate);
         this.broadcast({ type: 'NOTE_UPDATE', note: duplicate });
         this.toast("Task duplicated");
     },
@@ -1451,43 +1501,6 @@ const app = {
     ctxDelete: function() { document.getElementById('context-menu').style.display = 'none'; this.deleteNote(this.ctxNoteId); },
 
     // --- INTERACTIONS ---
-    setupPanZoom: function() {
-        const container = document.getElementById('board-container');
-        container.addEventListener('wheel', (e) => {
-            if (window.innerWidth < 1024) return; // Disable on mobile
-            if (e.ctrlKey || e.metaKey) {
-                e.preventDefault();
-                const zoom = Math.exp((e.deltaY < 0 ? 1 : -1) * 0.08);
-                this.transform.scale = Math.min(Math.max(0.5, this.transform.scale * zoom), 1.5);
-                document.getElementById('canvas-wrapper').style.transform = `translate(${this.transform.x}px, ${this.transform.y}px) scale(${this.transform.scale})`;
-            }
-        }, { passive: false });
-
-        container.addEventListener('mousedown', (e) => {
-            if (e.target.closest('.note') || window.innerWidth < 1024) return;
-            this.isPanning = true;
-            this.startX = e.clientX - this.transform.x;
-            this.startY = e.clientY - this.transform.y;
-        });
-        window.addEventListener('mousemove', (e) => {
-            if (!this.isPanning || window.innerWidth < 1024) return;
-            this.transform.x = e.clientX - this.startX;
-            this.transform.y = e.clientY - this.startY;
-            document.getElementById('canvas-wrapper').style.transform = `translate(${this.transform.x}px, ${this.transform.y}px) scale(${this.transform.scale})`;
-        });
-        window.addEventListener('mouseup', () => this.isPanning = false);
-    },
-
-    getDragAfterElement: function(container, y) {
-        const draggableElements = [...container.querySelectorAll('.note:not(.dragging)')];
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
-            if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
-            else return closest;
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
-    },
-
     setupDragAndDrop: function() {
         document.addEventListener('dragstart', (e) => {
             const el = e.target.closest('.note');
@@ -1609,7 +1622,12 @@ const app = {
 
             note.status = newStatus;
             note.timestamps.lastModified = Date.now();
-            this.saveState(); this.renderNotes();
+            this.saveState(); 
+            
+            // Re-render the affected columns
+            this.patchNoteDOM(note);
+            if(newOrderArray) this.sortColumnDOM(newStatus);
+            
             this.broadcast({ type: 'FULL_STATE', state: this.state }); // Broadcast full state to sync order perfectly
             
             if(window.TrodoAPI && window.TrodoAPI._callbacks) {
@@ -1652,10 +1670,43 @@ const app = {
         if (note.isPaused) { note.isPaused = false; note.timestamps.inProgress = Date.now(); } 
         else { note.isPaused = true; note.accumulatedProgressTime += (Date.now() - note.timestamps.inProgress); }
         note.timestamps.lastModified = Date.now();
-        this.saveState(); this.renderNotes(); this.broadcast({ type: 'NOTE_UPDATE', note });
+        this.saveState(); this.patchNoteDOM(note); this.broadcastPatch(noteId, { isPaused: note.isPaused, accumulatedProgressTime: note.accumulatedProgressTime, timestamps: note.timestamps });
     },
 
-    // --- MODALS ---
+    // --- MODALS & SUBTASKS ---
+    renderChecklistModal: function() {
+        const container = document.getElementById('checklist-container');
+        container.innerHTML = this.currentChecklist.map((c, i) => `
+            <div class="checklist-item ${c.done ? 'done' : ''}">
+                <input type="checkbox" ${c.done ? 'checked' : ''} onchange="app.toggleChecklistItem(${i}, this.checked)">
+                <span style="flex:1;">${c.text}</span>
+                <button type="button" onclick="app.removeChecklistItem(${i})" style="padding:2px 6px; font-size:10px; color:var(--urgent-color); background:transparent; border:none;">✕</button>
+            </div>
+        `).join('');
+    },
+
+    addChecklistItem: function() {
+        const input = document.getElementById('new-check-input');
+        const text = input.value.trim();
+        if(text) {
+            this.currentChecklist.push({ text, done: false });
+            input.value = '';
+            this.renderChecklistModal();
+        }
+    },
+
+    toggleChecklistItem: function(index, isDone) {
+        if(this.currentChecklist[index]) {
+            this.currentChecklist[index].done = isDone;
+            this.renderChecklistModal();
+        }
+    },
+
+    removeChecklistItem: function(index) {
+        this.currentChecklist.splice(index, 1);
+        this.renderChecklistModal();
+    },
+
     openNoteModal: function(noteId = null) {
         const modal = document.getElementById('modal-overlay');
         const isEditing = noteId && this.state.notes[noteId];
@@ -1688,6 +1739,10 @@ const app = {
         document.getElementById('enable-assign').checked = hasAssignee;
         document.getElementById('assign-ui').style.display = hasAssignee ? 'block' : 'none';
         document.getElementById('note-assignee').value = hasAssignee ? note.assignedUser : 'Robot';
+
+        // Checklist Logic
+        this.currentChecklist = isEditing && note.checklists ? JSON.parse(JSON.stringify(note.checklists)) : [];
+        this.renderChecklistModal();
 
         // Render History Log
         const historyContainer = document.getElementById('history-container');
@@ -1750,18 +1805,19 @@ const app = {
             orderIndex: isNew ? 0 : (this.state.notes[id].orderIndex||0),
             history: isNew ? [{ action: 'Created', user: this.myId, time: Date.now() }] : (this.state.notes[id].history || []),
             timestamps: isNew ? { created: Date.now(), inProgress: null, completed: null, lastModified: Date.now() } 
-                              : { ...this.state.notes[id].timestamps, lastModified: Date.now() }
+                              : { ...this.state.notes[id].timestamps, lastModified: Date.now() },
+            checklists: this.currentChecklist
         };
 
         this.state.notes[id] = note;
-        this.saveState(); this.renderNotes(); this.broadcast({ type: 'NOTE_UPDATE', note });
+        this.saveState(); this.patchNoteDOM(note); this.broadcast({ type: 'NOTE_UPDATE', note });
         this.closeModal();
     },
 
     deleteNote: function(id) {
         this.confirm("Delete this note permanently?", () => {
             delete this.state.notes[id];
-            this.saveState(); this.renderNotes();
+            this.saveState(); document.getElementById(`note-${id}`)?.remove();
             this.broadcast({ type: 'NOTE_DELETED', noteId: id });
         });
     },
@@ -1829,7 +1885,7 @@ const app = {
         this.saveState();
         this.renderUsers();
         this.renderChat();
-        if (notesChanged) this.renderNotes();
+        if (notesChanged) this.renderAll();
         
         this.broadcast({ type: 'USER_UPDATE', user: this.state.users[this.myId] });
         if (notesChanged) this.broadcast({ type: 'FULL_STATE', state: this.state });
