@@ -64,7 +64,7 @@
         .user-avatar .tooltip { visibility: hidden; position: absolute; top: 120%; right: 50%; transform: translateX(50%); background: var(--text-color); color: var(--bg-color); padding: 6px 10px; border-radius: 6px; font-size: 11px; white-space: nowrap; opacity: 0; transition: opacity 0.2s; font-weight: normal; z-index: 100; text-align: center; line-height: 1.4; pointer-events: none;}
         .user-avatar:hover .tooltip { visibility: visible; opacity: 1; }
 
-        /* Board Area - Native Scrolling */
+        /* Board Area */
         #board-container { flex: 1; overflow-x: auto; overflow-y: hidden; position: relative; margin-top: 70px; scroll-behavior: smooth; }
         #canvas-wrapper { display: flex; gap: 24px; padding: 20px 40px; min-width: max-content; height: calc(100% - 40px); }
         
@@ -109,30 +109,39 @@
         .view-archive-btn:hover { opacity: 1; text-decoration: underline; }
 
         /* Perfectly Synced Factory Conveyor Animation */
-        .col-loader { width: 90px; height: 14px; box-shadow: 0 3px 0 var(--text-color); position: absolute; left: 50%; transform: translateX(-50%); display: grid; clip-path: inset(-60px 0 -5px); opacity: 0.9; }
+        .col-loader { width: 90px; height: 14px; box-shadow: 0 3px 0 var(--text-color); position: absolute; left: 50%; transform: translateX(-50%); display: grid; clip-path: inset(-60px 0 -5px); opacity: 1; border: none; }
         .col-loader:after { 
             content: ""; position: relative; 
             background: repeating-linear-gradient(90deg, transparent 0 calc(50% - 8px), var(--border-color) 0 calc(50% + 8px), transparent 0 100%) 0 0/calc(100%/3) 100%; 
-            animation: l6-1 2s infinite linear; z-index: 3; 
+            animation: conveyor 4s infinite linear; z-index: 3; 
         } 
         .col-loader:before { 
             content: ""; position: absolute; width: 14px; aspect-ratio: 1; left: calc(50% - 7px); bottom: 0; border-radius: 50%; background: var(--accent-color); 
-            animation: l6-2 2s infinite linear, shape-shift 10s infinite steps(1), color-shift 10s infinite steps(1); z-index: 2; 
+            animation: drop 4s infinite linear, shape-shift 20s infinite steps(1), color-shift 20s infinite steps(1); z-index: 2; 
         }
-        @keyframes l6-1 { 50%,100% {background-position: calc(100%/2) 0} }
-        @keyframes l6-2 { 0%,20% {transform:translateY(-60px); opacity:0;} 25% {transform:translateY(-60px); opacity:1;} 35%,75% {transform:translateY(0); opacity:1;} 80%,100% {transform:translateY(0); opacity:0;} }
+        @keyframes conveyor {
+            0%, 10% { background-position: -30px 0; }
+            20%, 80% { background-position: 0 0; }
+            90%, 100% { background-position: 30px 0; }
+        }
+        @keyframes drop {
+            0%, 5% { transform: translateY(-60px); opacity: 0; }
+            6%, 10% { transform: translateY(-60px); opacity: 1; }
+            20%, 80% { transform: translateY(0); opacity: 1; }
+            90%, 100% { transform: translate(30px, 0); opacity: 0; }
+        }
         @keyframes shape-shift { 
-            0%, 20% { border-radius: 50%; clip-path: none; } 
-            20%, 40% { border-radius: 3px; clip-path: none; } 
-            40%, 60% { border-radius: 0; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); } 
-            60%, 80% { border-radius: 0; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); } 
+            0%, 19.9% { border-radius: 50%; clip-path: none; } 
+            20%, 39.9% { border-radius: 3px; clip-path: none; } 
+            40%, 59.9% { border-radius: 0; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); } 
+            60%, 79.9% { border-radius: 0; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); } 
             80%, 100% { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); } 
         }
         @keyframes color-shift {
-            0%, 20% { background: var(--accent-color); }
-            20%, 40% { background: var(--urgent-color); }
-            40%, 60% { background: var(--done-color); }
-            60%, 80% { background: #ff9500; }
+            0%, 19.9% { background: var(--accent-color); }
+            20%, 39.9% { background: var(--urgent-color); }
+            40%, 59.9% { background: var(--done-color); }
+            60%, 79.9% { background: #ff9500; }
             80%, 100% { background: #af52de; }
         }
 
@@ -196,13 +205,17 @@
         #col-todo .history-tooltip { left: 0; transform: none; }
         #col-done .history-tooltip { right: 0; left: auto; transform: none; }
 
-        /* Subtasks */
-        .checklist-progress { font-size: 10px; opacity: 0.8; display: flex; align-items: center; gap: 6px; margin-top: 4px; }
-        .checklist-bar { flex: 1; height: 4px; background: rgba(128,128,128,0.2); border-radius: 2px; overflow: hidden; }
-        .checklist-fill { height: 100%; background: var(--accent-color); transition: width 0.3s; }
-        .checklist-item { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 4px 0; border-bottom: 1px solid rgba(128,128,128,0.1); }
-        .checklist-item input[type="checkbox"] { cursor: pointer; }
-        .checklist-item.done span { text-decoration: line-through; opacity: 0.5; }
+        /* Subtasks Preview */
+        .preview-checklists { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+        .preview-checklists label { display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer; opacity: 0.9; }
+        .preview-checklists label:hover { opacity: 1; }
+
+        /* Mobile Actions */
+        .mobile-actions { display: none; margin-top: 10px; gap: 5px; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 8px; }
+        @media (max-width: 1023px) {
+            .note.mobile-selected .mobile-actions { display: flex; }
+            .note.mobile-selected { outline: 2px solid var(--accent-color); }
+        }
 
         /* Floating Chat & Guide */
         #chat-fab { position: fixed; bottom: max(25px, env(safe-area-inset-bottom)); right: 25px; width: 56px; height: 56px; border-radius: 50%; background: var(--accent-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 10px 24px rgba(10, 132, 255, 0.4); cursor: pointer; z-index: 200; transition: transform 0.2s; border: none; }
@@ -220,6 +233,7 @@
         .chat-msg span.time { font-size: 9px; opacity: 0.6; display: block; margin-top: 4px; }
         #chat-input-area { padding: 12px; display: flex; gap: 8px; border-top: 1px solid var(--border-color); }
         #chat-input { flex: 1; border-radius: 20px; padding: 10px 16px; }
+        #chat-send-btn { width: 32px; height: 32px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 
         /* Logger Window */
         #logger-window { position: fixed; top: calc(70px + env(safe-area-inset-top)); right: 25px; width: 350px; max-height: 250px; background: rgba(0,0,0,0.85); color: #0f0; font-family: monospace; font-size: 11px; border-radius: 12px; z-index: 250; display: none; flex-direction: column; border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow); backdrop-filter: blur(10px); pointer-events: auto;}
@@ -262,6 +276,13 @@
         @keyframes confetti-pop { 0% { transform: translate(0,0) rotate(0deg) scale(1); opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0); opacity: 0; } }
         
         pre.api-code { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 11px; overflow-x: auto; margin-top: 5px; border: 1px solid #333; min-height: 150px; max-height: 250px; overflow-y: auto; white-space: pre; }
+
+        /* Lite Mode Overrides */
+        body.lite-mode .brand-logo { animation: none; }
+        body.lite-mode .col-loader { display: none !important; }
+        body.lite-mode .mini-loader { animation: none; border: 2px solid var(--accent-color); border-radius: 50%; }
+        body.lite-mode .note { transition: none; }
+        body.lite-mode .confetti { display: none !important; }
     </style>
 </head>
 <body>
@@ -277,7 +298,7 @@
             <div style="border-left: 1px solid var(--border-color); height: 16px; margin: 0 2px;"></div>
             
             <span class="id-display" onclick="app.handleIdClick(event)" title="Click to reveal/edit" id="my-peer-id-container">
-                <span id="my-peer-id-mask">...</span>
+                <span id="my-peer-id-mask">***</span>
                 <span id="my-peer-id" style="display:none;"></span>
             </span>
             
@@ -286,6 +307,10 @@
 
         <div class="top-group" style="background: transparent; border: none; box-shadow: none; padding:0;">
             <div class="top-group">
+                <button onclick="app.clearAllTasks()" style="background:transparent; border:none; box-shadow:none; font-size:16px; padding:4px;" title="Clear Board">🗑️</button>
+                <label style="font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; font-weight:600;" title="Disable animations for speed">
+                    <input type="checkbox" id="toggle-lite" onchange="app.toggleLiteMode(this.checked)"> ⚡ Lite
+                </label>
                 <button onclick="app.toggleTheme()" style="background:transparent; border:none; box-shadow:none; font-size:16px; padding:4px;">🌓</button>
                 <label style="font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; font-weight:600;">
                     <input type="checkbox" id="toggle-review" onchange="app.toggleReviewColumn(this.checked)"> Review
@@ -358,7 +383,7 @@
         <div id="chat-messages"></div>
         <div id="chat-input-area">
             <input type="text" id="chat-input" placeholder="Message...">
-            <button id="chat-send-btn" class="primary" style="border-radius:20px; padding: 8px 16px;">></button>
+            <button id="chat-send-btn" class="primary">></button>
         </div>
     </div>
 
@@ -390,7 +415,7 @@
 
     <!-- Guide Modal -->
     <div id="guide-modal" class="overlay" onmousedown="if(event.target===this) { this.classList.remove('active'); setTimeout(()=>this.style.display='none',200); }">
-        <div class="modal" style="width: 600px; max-height: 85vh; overflow-y: auto;">
+        <div class="modal" style="width: 600px; max-height: 85vh; overflow-y: auto;" onmousedown="event.stopPropagation()">
             <h3 style="margin-bottom: 5px;">Trodo Pro Guide</h3>
             <p style="font-size: 13px; opacity: 0.8; line-height: 1.5;">Welcome to Trodo! This is a spatial, real-time Kanban board. Use your mouse wheel to scroll horizontally.</p>
             
@@ -590,7 +615,7 @@ const Logger = {
 };
 
 const app = {
-    state: { notes: {}, users: {}, chat: [], settings: { reviewEnabled: false, apiCode: null }, archived: {} },
+    state: { notes: {}, users: {}, chat: [], settings: { reviewEnabled: false, apiCode: null, liteMode: false }, archived: {} },
     localNicknames: {},
     myId: null, peer: null, connections: {},
     hoveredNoteId: null, ctxNoteId: null, draggedNoteId: null,
@@ -844,6 +869,7 @@ const app = {
     },
 
     fireConfetti: function(x, y) {
+        if (this.state.settings.liteMode) return;
         const colors = ['#ff3b30', '#34c759', '#0066cc', '#ff9500', '#af52de', '#ffcc00', '#ff2d55'];
         const shapes = ['50%', '0%', 'polygon(50% 0%, 0% 100%, 100% 100%)'];
         for(let i=0; i<60; i++) {
@@ -856,18 +882,50 @@ const app = {
             if(conf.style.clipPath === '50%') conf.style.borderRadius = '50%';
             
             const angle = Math.random() * Math.PI * 2;
-            const velocity = 50 + Math.random() * 200;
+            const velocity = 50 + Math.random() * 250;
             const tx = Math.cos(angle) * velocity;
-            const ty = Math.sin(angle) * velocity - (150 + Math.random() * 100);
+            const ty = Math.sin(angle) * velocity - (150 + Math.random() * 150);
             const rot = Math.random() * 1080;
             
             conf.style.setProperty('--tx', `${tx}px`);
             conf.style.setProperty('--ty', `${ty}px`);
             conf.style.setProperty('--rot', `${rot}deg`);
-            conf.style.animation = `confetti-pop ${1.5 + Math.random()}s cubic-bezier(0.25, 0.8, 0.25, 1) forwards`;
+            conf.style.animation = `confetti-pop ${2 + Math.random() * 1.5}s cubic-bezier(0.25, 0.8, 0.25, 1) forwards`;
             document.body.appendChild(conf);
-            setTimeout(() => conf.remove(), 3000);
+            setTimeout(() => conf.remove(), 3500);
         }
+    },
+
+    fireMiniConfetti: function(x, y) {
+        if (this.state.settings.liteMode) return;
+        const colors = ['#ff3b30', '#34c759', '#0066cc', '#ff9500', '#af52de'];
+        for(let i=0; i<15; i++) {
+            const conf = document.createElement('div');
+            conf.className = 'confetti';
+            conf.style.left = x + 'px';
+            conf.style.top = y + 'px';
+            conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            conf.style.borderRadius = '50%';
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 20 + Math.random() * 80;
+            const tx = Math.cos(angle) * velocity;
+            const ty = Math.sin(angle) * velocity - 50;
+            conf.style.setProperty('--tx', `${tx}px`);
+            conf.style.setProperty('--ty', `${ty}px`);
+            conf.style.animation = `confetti-pop 1s cubic-bezier(0.25, 0.8, 0.25, 1) forwards`;
+            document.body.appendChild(conf);
+            setTimeout(() => conf.remove(), 1000);
+        }
+    },
+
+    clearAllTasks: function() {
+        this.confirm("Are you sure you want to delete ALL tasks? This cannot be undone.", () => {
+            this.state.notes = {};
+            this.saveState();
+            this.renderNotes();
+            this.broadcast({ type: 'FULL_STATE', state: this.state });
+            this.toast("All tasks cleared.");
+        });
     },
 
     archiveDone: function() {
@@ -981,7 +1039,6 @@ const app = {
     // --- KEYBOARD SHORTCUTS ---
     setupShortcuts: function() {
         document.addEventListener('keydown', (e) => {
-            // Handle Enter key for Modals/Dialogs
             if (e.key === 'Enter') {
                 const dialog = document.getElementById('dialog-overlay');
                 if (dialog.classList.contains('active')) {
@@ -991,7 +1048,7 @@ const app = {
                 }
                 const modal = document.getElementById('modal-overlay');
                 if (modal.classList.contains('active')) {
-                    if (e.target.tagName === 'TEXTAREA' || e.target.id === 'new-check-input') return; // Allow newlines in textarea and enter in checklist
+                    if (e.target.tagName === 'TEXTAREA' || e.target.id === 'new-check-input') return;
                     this.saveNote();
                     e.preventDefault();
                     return;
@@ -1066,6 +1123,8 @@ const app = {
         this.localNicknames = JSON.parse(localStorage.getItem('kanban_nicks') || '{}');
         document.getElementById('toggle-review').checked = this.state.settings.reviewEnabled;
         this.toggleReviewColumn(this.state.settings.reviewEnabled, false);
+        document.getElementById('toggle-lite').checked = this.state.settings.liteMode;
+        this.toggleLiteMode(this.state.settings.liteMode, false);
     },
     saveState: function() { localStorage.setItem('kanban_state', JSON.stringify(this.state)); },
 
@@ -1105,6 +1164,8 @@ const app = {
                 this.state.settings = data.state.settings;
                 document.getElementById('toggle-review').checked = this.state.settings.reviewEnabled;
                 this.toggleReviewColumn(this.state.settings.reviewEnabled, false);
+                document.getElementById('toggle-lite').checked = this.state.settings.liteMode;
+                this.toggleLiteMode(this.state.settings.liteMode, false);
             }
             if(data.state.archived) {
                 this.state.archived = { ...this.state.archived, ...data.state.archived };
@@ -1148,7 +1209,6 @@ const app = {
             if (el) {
                 if (data.isLocked) {
                     el.classList.add('locked');
-                    // Find user color or default
                     el.style.outlineColor = 'var(--accent-color)';
                 } else {
                     el.classList.remove('locked');
@@ -1244,7 +1304,6 @@ const app = {
             
             notes.forEach(n => col.appendChild(n));
             
-            // Update loader visibility
             if(status === 'in-progress') {
                 const hasActive = notes.some(n => {
                     const note = this.state.notes[n.dataset.id];
@@ -1253,6 +1312,17 @@ const app = {
                 document.getElementById('main-progress-loader').style.display = hasActive ? 'grid' : 'none';
             }
         });
+    },
+
+    getPrevCol: function(status) {
+        const cols = ['todo', 'in-progress', this.state.settings.reviewEnabled ? 'review' : null, 'done'].filter(Boolean);
+        const idx = cols.indexOf(status);
+        return idx > 0 ? cols[idx - 1] : status;
+    },
+    getNextCol: function(status) {
+        const cols = ['todo', 'in-progress', this.state.settings.reviewEnabled ? 'review' : null, 'done'].filter(Boolean);
+        const idx = cols.indexOf(status);
+        return idx < cols.length - 1 ? cols[idx + 1] : status;
     },
 
     patchNoteDOM: function(note) {
@@ -1267,6 +1337,14 @@ const app = {
             el.ondblclick = (e) => { if(!e.target.isContentEditable && e.target.tagName !== 'INPUT') this.openNoteModal(note.id); };
             el.onmouseenter = () => { this.hoveredNoteId = note.id; el.classList.add('hover-focus'); };
             el.onmouseleave = () => { this.hoveredNoteId = null; el.classList.remove('hover-focus'); };
+            el.onclick = (e) => {
+                if (window.innerWidth < 1024 && !e.target.closest('input')) {
+                    document.querySelectorAll('.note.mobile-selected').forEach(n => {
+                        if (n !== el) n.classList.remove('mobile-selected');
+                    });
+                    el.classList.toggle('mobile-selected');
+                }
+            };
             el.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 this.ctxNoteId = note.id;
@@ -1278,7 +1356,7 @@ const app = {
             isNew = true;
         }
 
-        el.className = `note priority-${note.priority} status-${note.status} ${note.isPaused ? 'paused' : ''}`;
+        el.className = `note priority-${note.priority} status-${note.status} ${note.isPaused ? 'paused' : ''} ${el.classList.contains('mobile-selected') ? 'mobile-selected' : ''}`;
         if(note.color) el.style.background = note.color;
         else el.style.background = '';
 
@@ -1348,6 +1426,14 @@ const app = {
             const doneCount = note.checklists.filter(c => c.done).length;
             const pct = (doneCount / note.checklists.length) * 100;
             checklistHtml = `
+                <div class="preview-checklists">
+                    ${note.checklists.map((c, i) => `
+                        <label onclick="event.stopPropagation()">
+                            <input type="checkbox" ${c.done ? 'checked' : ''} onchange="app.togglePreviewSubtask('${note.id}', ${i}, this.checked, event)">
+                            <span style="${c.done ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${c.text}</span>
+                        </label>
+                    `).join('')}
+                </div>
                 <div class="checklist-progress">
                     <div class="checklist-bar"><div class="checklist-fill" style="width:${pct}%"></div></div>
                     <span>${doneCount}/${note.checklists.length}</span>
@@ -1355,7 +1441,15 @@ const app = {
             `;
         }
 
-        // Only update innerHTML if we are not currently quick-editing this note
+        const mobileActionsHtml = `
+            <div class="mobile-actions">
+                <button onclick="app.moveNoteNetwork(app.state.notes['${note.id}'], app.getPrevCol('${note.status}')); event.stopPropagation();">←</button>
+                <button onclick="app.moveNoteNetwork(app.state.notes['${note.id}'], app.getNextCol('${note.status}')); event.stopPropagation();">→</button>
+                <button onclick="app.ctxNoteId='${note.id}'; app.ctxDuplicate(); event.stopPropagation();">📋</button>
+                <button onclick="app.ctxNoteId='${note.id}'; app.ctxDelete(); event.stopPropagation();" style="color: var(--urgent-color);">🗑️</button>
+            </div>
+        `;
+
         if (!el.querySelector('.editing')) {
             el.innerHTML = `
                 ${moveBtnHtml}
@@ -1376,6 +1470,7 @@ const app = {
                     ${spinnerHtml}
                 </div>
                 ${progressHtml}
+                ${mobileActionsHtml}
             `;
         }
 
@@ -1387,6 +1482,23 @@ const app = {
         this.sortColumnDOM(note.status);
     },
 
+    togglePreviewSubtask: function(noteId, index, isDone, event) {
+        event.stopPropagation();
+        const note = this.state.notes[noteId];
+        if (note && note.checklists && note.checklists[index]) {
+            note.checklists[index].done = isDone;
+            note.timestamps.lastModified = Date.now();
+            this.saveState();
+            this.patchNoteDOM(note);
+            this.broadcastPatch(noteId, { checklists: note.checklists, timestamps: note.timestamps });
+            
+            if (isDone) {
+                const rect = event.target.getBoundingClientRect();
+                this.fireMiniConfetti(rect.left, rect.top);
+            }
+        }
+    },
+
     // --- QUICK EDIT LOGIC ---
     startQuickEdit: function(el, noteId, field, e) {
         if(e) e.stopPropagation();
@@ -1395,7 +1507,6 @@ const app = {
         if(!note) return;
 
         if(field === 'desc') {
-            // Revert markdown to raw text for editing
             el.innerText = note.desc || '';
         } else if(el.classList.contains('empty-desc')) { 
             el.innerHTML = ''; 
@@ -1415,7 +1526,6 @@ const app = {
 
         this.broadcast({ type: 'EDIT_LOCK', noteId, user: this.myId, isLocked: true });
 
-        // Debounced input handler for real-time sync without flooding
         const debouncedPatch = this.debounce((newVal) => {
             const patch = {};
             patch[field] = newVal;
@@ -1442,12 +1552,12 @@ const app = {
             this.saveState(); 
             this.broadcastPatch(noteId, { [field]: note[field], timestamps: note.timestamps });
             this.broadcast({ type: 'EDIT_LOCK', noteId, user: this.myId, isLocked: false });
-            this.patchNoteDOM(note); // Re-render to apply markdown
+            this.patchNoteDOM(note);
         };
 
         el.onkeydown = (ev) => { 
             if(ev.key === 'Enter' && !ev.shiftKey) { 
-                if (field === 'desc') return; // Allow Enter in desc
+                if (field === 'desc') return; 
                 ev.preventDefault(); el.blur(); 
             } 
         };
@@ -1565,7 +1675,6 @@ const app = {
 
                 const newStatus = content.dataset.status;
                 
-                // Calculate new visual order BEFORE removing the spacer
                 const currentVisualNotes = Array.from(content.querySelectorAll('.note:not(.dragging)')).map(n => n.dataset.id);
                 const layoutElements = Array.from(content.querySelectorAll('.note:not(.dragging), .drop-spacer'));
                 const insertIndex = layoutElements.findIndex(el => el.classList.contains('drop-spacer'));
@@ -1584,7 +1693,6 @@ const app = {
         const oldStatus = note.status;
         
         const proceedWithDrop = () => {
-            // Apply new order if provided
             if (newOrderArray) {
                 const total = newOrderArray.length;
                 newOrderArray.forEach((id, idx) => {
@@ -1608,7 +1716,6 @@ const app = {
                 note.timestamps.completed = Date.now(); 
                 note.history.push({ action: 'Completed', user: this.myId, time: Date.now() });
                 
-                // Confetti!
                 const doneCol = document.getElementById('col-done');
                 const rect = doneCol.getBoundingClientRect();
                 this.fireConfetti(rect.left + rect.width/2, rect.top + 100);
@@ -1624,11 +1731,10 @@ const app = {
             note.timestamps.lastModified = Date.now();
             this.saveState(); 
             
-            // Re-render the affected columns
             this.patchNoteDOM(note);
             if(newOrderArray) this.sortColumnDOM(newStatus);
             
-            this.broadcast({ type: 'FULL_STATE', state: this.state }); // Broadcast full state to sync order perfectly
+            this.broadcast({ type: 'FULL_STATE', state: this.state });
             
             if(window.TrodoAPI && window.TrodoAPI._callbacks) {
                 window.TrodoAPI._callbacks.forEach(cb => cb(note));
@@ -1728,7 +1834,6 @@ const app = {
 
         this.selectColor(null, isEditing ? (note.color||'') : '');
 
-        // Assignee Logic
         const assigneeList = document.getElementById('assignee-list');
         assigneeList.innerHTML = '<option value="Robot"></option>';
         Object.values(this.state.users).forEach(u => {
@@ -1740,11 +1845,9 @@ const app = {
         document.getElementById('assign-ui').style.display = hasAssignee ? 'block' : 'none';
         document.getElementById('note-assignee').value = hasAssignee ? note.assignedUser : 'Robot';
 
-        // Checklist Logic
         this.currentChecklist = isEditing && note.checklists ? JSON.parse(JSON.stringify(note.checklists)) : [];
         this.renderChecklistModal();
 
-        // Render History Log
         const historyContainer = document.getElementById('history-container');
         const historyLog = document.getElementById('note-history-log');
         if (isEditing && note.history && note.history.length > 0) {
@@ -1836,6 +1939,11 @@ const app = {
         document.body.classList.toggle('review-enabled', enabled);
         if(save) { this.saveState(); this.broadcast({ type: 'FULL_STATE', state: this.state }); }
     },
+    toggleLiteMode: function(enabled, save = true) {
+        this.state.settings.liteMode = enabled;
+        document.body.classList.toggle('lite-mode', enabled);
+        if(save) { this.saveState(); this.broadcast({ type: 'FULL_STATE', state: this.state }); }
+    },
     toggleChat: function() {
         const panel = document.getElementById('chat-panel');
         panel.classList.toggle('open');
@@ -1910,7 +2018,7 @@ const app = {
         reader.onload = (e) => {
             try {
                 this.state = JSON.parse(e.target.result);
-                if (!this.state.settings) this.state.settings = { reviewEnabled: false };
+                if (!this.state.settings) this.state.settings = { reviewEnabled: false, liteMode: false };
                 this.saveState(); this.loadState(); this.renderAll(); this.broadcast({ type: 'FULL_STATE', state: this.state });
                 this.toast("Imported successfully.");
             } catch (err) { this.toast("Invalid JSON"); }
